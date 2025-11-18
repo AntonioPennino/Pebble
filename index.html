@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OtterCare — Gioco di cura della lontra</title>
+  <meta name="description" content="Prenditi cura della tua adorabile lontra virtuale! Un gioco web rilassante ispirato a Pou ma più tenero. Nutrila, gioca, puliscila e guardala crescere felice." />
+  <meta name="keywords" content="lontra, gioco, pet virtuale, tamagotchi, pou, animali, cute, kawaii" />
+  <meta name="author" content="OtterCare Team" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="OtterCare 🦦 - Gioco di cura della lontra" />
+  <meta property="og:description" content="Un adorabile gioco web per prendersi cura di una lontra virtuale. Più tenero di Pou!" />
+  <meta property="og:image" content="https://via.placeholder.com/1200x630/66cdaa/ffffff?text=OtterCare+🦦" />
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="OtterCare 🦦 - Gioco di cura della lontra" />
+  <meta name="twitter:description" content="Prenditi cura della tua lontra virtuale!" />
+  
+  <!-- PWA -->
+  <meta name="theme-color" content="#66cdaa" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="OtterCare" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦦</text></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%2366cdaa' rx='40'/><text x='90' y='140' font-size='100' text-anchor='middle'>🦦</text></svg>" />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>OtterCare 🦦</h1>
+    <p class="tag">Prenditi cura della tua lontra — alimenta, gioca, puliscila e falle fare il riposo.</p>
+  </header>
+
+  <main>
+    <section class="game-area">
+      <div class="otter-wrapper" id="otterWrapper">
+        <!-- Enhanced SVG otter with detailed features -->
+        <svg id="otterSvg" viewBox="0 0 220 140" width="360" height="240" role="img" aria-label="Lontra adorabile">
+          <defs>
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.18" />
+            </filter>
+            <radialGradient id="bodyGrad" cx="50%" cy="40%">
+              <stop offset="0%" stop-color="#8b6f47" />
+              <stop offset="100%" stop-color="#6b4423" />
+            </radialGradient>
+            <radialGradient id="bellyGrad" cx="50%" cy="30%">
+              <stop offset="0%" stop-color="#f5ddb8" />
+              <stop offset="100%" stop-color="#e8c89a" />
+            </radialGradient>
+          </defs>
+          
+          <!-- Body parts with better layering -->
+          <g id="otterBody" filter="url(#shadow)">
+            <!-- Tail -->
+            <ellipse id="tail" cx="165" cy="95" rx="35" ry="18" fill="url(#bodyGrad)" transform="rotate(-15 165 95)" />
+            
+            <!-- Back legs -->
+            <ellipse cx="135" cy="100" rx="15" ry="22" fill="#7a5a3a" />
+            <ellipse cx="155" cy="100" rx="15" ry="22" fill="#7a5a3a" />
+            
+            <!-- Main body -->
+            <ellipse cx="110" cy="80" rx="55" ry="35" fill="url(#bodyGrad)" />
+            
+            <!-- Belly -->
+            <ellipse cx="105" cy="85" rx="42" ry="28" fill="url(#bellyGrad)" />
+            
+            <!-- Front legs -->
+            <ellipse cx="85" cy="100" rx="12" ry="20" fill="#7a5a3a" />
+            <ellipse cx="105" cy="100" rx="12" ry="20" fill="#7a5a3a" />
+            
+            <!-- Paws -->
+            <ellipse cx="85" cy="115" rx="10" ry="8" fill="#6b4423" />
+            <ellipse cx="105" cy="115" rx="10" ry="8" fill="#6b4423" />
+          </g>
+          
+          <!-- Head group -->
+          <g id="head">
+            <!-- Neck connection -->
+            <ellipse cx="75" cy="70" rx="20" ry="18" fill="#7a5a3a" />
+            
+            <!-- Head base -->
+            <circle cx="60" cy="55" r="32" fill="url(#bodyGrad)" />
+            
+            <!-- Ears -->
+            <ellipse cx="45" cy="35" rx="8" ry="11" fill="#6b4423" />
+            <ellipse cx="75" cy="35" rx="8" ry="11" fill="#6b4423" />
+            
+            <!-- Face highlights -->
+            <ellipse cx="60" cy="58" rx="26" ry="22" fill="#8b6f47" opacity="0.6" />
+            
+            <!-- Cheeks -->
+            <circle cx="40" cy="62" r="12" fill="#9b7f57" opacity="0.5" />
+            <circle cx="80" cy="62" r="12" fill="#9b7f57" opacity="0.5" />
+            
+            <!-- Snout/muzzle -->
+            <ellipse cx="60" cy="65" rx="16" ry="13" fill="url(#bellyGrad)" />
+            
+            <!-- Nose -->
+            <ellipse cx="60" cy="62" rx="6" ry="5" fill="#3a2415" />
+            <ellipse cx="59" cy="61" rx="2" ry="1.5" fill="#fff" opacity="0.4" />
+            
+            <!-- Whisker dots -->
+            <circle cx="38" cy="60" r="1.5" fill="#3a2415" />
+            <circle cx="35" cy="63" r="1.5" fill="#3a2415" />
+            <circle cx="82" cy="60" r="1.5" fill="#3a2415" />
+            <circle cx="85" cy="63" r="1.5" fill="#3a2415" />
+            
+            <!-- Eyes -->
+            <g id="eyes">
+              <ellipse cx="50" cy="52" rx="7" ry="8" fill="#fff" />
+              <circle id="leftPupil" cx="51" cy="53" r="4" fill="#2a1a0f" />
+              <circle cx="50" cy="51" r="1.8" fill="#fff" opacity="0.7" />
+              
+              <ellipse cx="70" cy="52" rx="7" ry="8" fill="#fff" />
+              <circle id="rightPupil" cx="71" cy="53" r="4" fill="#2a1a0f" />
+              <circle cx="70" cy="51" r="1.8" fill="#fff" opacity="0.7" />
+            </g>
+            
+            <!-- Eyebrows (for expression) -->
+            <path id="leftBrow" d="M 45 45 Q 50 43 55 45" stroke="#5a3a1f" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6" />
+            <path id="rightBrow" d="M 65 45 Q 70 43 75 45" stroke="#5a3a1f" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6" />
+            
+            <!-- Mouth -->
+            <path id="mouth" d="M 54 70 Q 60 73 66 70" stroke="#3a2415" stroke-width="2.5" fill="none" stroke-linecap="round" />
+          </g>
+          
+          <!-- Blush marks (hidden by default) -->
+          <ellipse id="blushLeft" cx="42" cy="60" rx="8" ry="5" fill="#ff9999" opacity="0" />
+          <ellipse id="blushRight" cx="78" cy="60" rx="8" ry="5" fill="#ff9999" opacity="0" />
+          
+          <!-- Food item (hidden by default) -->
+          <g id="foodItem" opacity="0">
+            <ellipse cx="25" cy="75" rx="8" ry="10" fill="#ff6b6b" />
+            <path d="M 25 68 L 23 62 L 27 60" stroke="#4a9b4a" stroke-width="2" fill="none" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="info">
+        <div class="status" id="statusBars">
+          <div class="bar">
+            <label>Fame</label>
+            <div class="progress"><div id="hungerBar" class="fill"></div></div>
+          </div>
+          <div class="bar">
+            <label>Felicità</label>
+            <div class="progress"><div id="happyBar" class="fill"></div></div>
+          </div>
+          <div class="bar">
+            <label>Pulizia</label>
+            <div class="progress"><div id="cleanBar" class="fill"></div></div>
+          </div>
+          <div class="bar">
+            <label>Energia</label>
+            <div class="progress"><div id="energyBar" class="fill"></div></div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="feedBtn">Dai da mangiare</button>
+          <button id="playBtn">Gioca</button>
+          <button id="bathBtn">Bagna</button>
+          <button id="sleepBtn">Fallo dormire</button>
+        </div>
+
+        <div class="meta">
+          <div class="coins">Monete: <span id="coins">0</span> 🪙</div>
+          <div class="saveLoad">
+            <button id="resetBtn">Nuova lontra</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <aside id="shop" class="shop">
+      <h2>Negozio</h2>
+      <div class="item">
+        <div class="item-icon">🎩</div>
+        <div class="item-info">Cappello — <strong>50</strong> monete</div>
+        <button class="buy" data-price="50" data-item="hat">Compra</button>
+      </div>
+    </aside>
+
+    <div id="overlay" class="overlay hidden">
+      <div class="minigame" id="minigame">
+        <h3>Pesciolino! Clicca i pesci nella finestra! 10s</h3>
+        <div id="fishArea" class="fish-area"></div>
+        <div class="mini-info">Punteggio: <span id="miniScore">0</span></div>
+        <button id="closeMini">Abbandona</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <small>Prototipo OtterCare — Apri `index.html` per giocare.</small>
+  </footer>
+
+  <script>
+    // Registra Service Worker per PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registrato', reg))
+        .catch(err => console.log('SW errore', err));
+    }
+  </script>
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "OtterCare - Cura la tua lontra",
+  "short_name": "OtterCare",
+  "description": "Un adorabile gioco per prendersi cura della tua lontra virtuale",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3faf8",
+  "theme_color": "#66cdaa",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "it-IT"
+}

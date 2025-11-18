@@ -1,0 +1,69 @@
+:root{
+  --bg:#f3faf8;
+  --card:#fff;
+  --accent:#66cdaa;
+  --muted:#6b6b6b;
+}
+*{box-sizing:border-box}
+body{font-family:Inter,Segoe UI,system-ui,Arial;margin:0;background:linear-gradient(180deg,var(--bg),#eaf7f3);color:#333}
+header{padding:16px;text-align:center}
+header h1{margin:0;font-size:2rem}
+.tag{color:var(--muted)}
+main{display:flex;gap:20px;padding:16px;align-items:flex-start;max-width:1100px;margin:16px auto}
+.game-area{display:flex;gap:20px;flex:1;background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 30px rgba(100,100,100,0.08)}
+.otter-wrapper{width:340px;height:260px;display:flex;align-items:center;justify-content:center}
+.info{flex:1}
+.status .bar{margin-bottom:10px}
+.status label{display:block;font-size:0.9rem;margin-bottom:6px}
+.progress{background:#e6f2ef;border-radius:6px;height:12px;overflow:hidden}
+.fill{height:100%;width:50%;background:linear-gradient(90deg,var(--accent),#3cb38f);transition:width 0.4s ease, background 0.3s}
+.fill.low{background:linear-gradient(90deg,#ff9966,#ff6b6b)}
+.fill.critical{background:linear-gradient(90deg,#ff4757,#d63031);animation:pulse 1s ease-in-out infinite}
+.controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.controls button{padding:10px 14px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer}
+.controls button:hover{transform:translateY(-2px)}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.coins{font-weight:700}
+.shop{width:240px;background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 30px rgba(100,100,100,0.06)}
+.shop h2{margin-top:0}
+.item{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.item-icon{font-size:1.8rem}
+.buy{padding:6px 10px;border-radius:8px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center}
+.hidden{display:none}
+.minigame{background:#fff;padding:18px;border-radius:12px;width:420px}
+.fish-area{width:100%;height:180px;background:linear-gradient(#b8e1ff,#fff);border-radius:8px;position:relative;overflow:hidden;margin-top:6px}
+.fish{position:absolute;font-size:28px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.mini-info{margin-top:8px}
+footer{padding:6px;text-align:center;font-size:0.8rem;margin-top:10px;color:var(--muted)}
+/* Otter animations */
+#otterSvg{transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)}
+#otterSvg.hop{transform:translateY(-15px) scale(1.05)}
+#otterSvg.rest{filter:grayscale(40%) brightness(0.9)}
+#otterSvg.eating{animation:eatBob 0.5s ease-in-out 3}
+#otterSvg.bathing{animation:bathShake 0.4s ease-in-out 4}
+
+/* Eye animations */
+#eyes{transition:transform 0.15s ease}
+#otterSvg.blink #leftPupil, #otterSvg.blink #rightPupil{transform:scaleY(0.2);transform-origin:center;transition:transform 0.1s}
+
+/* Emotion states - handled via JS for cross-browser compat */
+#otterSvg.happy #blushLeft, #otterSvg.happy #blushRight{opacity:0.4;transition:opacity 0.3s}
+#otterSvg.sleepy #eyes{transform:scaleY(0.4);transform-origin:center}
+#otterSvg.feeding #foodItem{opacity:1;animation:foodFloat 1.5s ease-out}
+
+/* Tail wag */
+#tail{transform-origin:165px 95px;transition:transform 0.2s ease}
+#otterSvg.happy #tail{animation:tailWag 0.6s ease-in-out infinite}
+
+/* Keyframe animations */
+@keyframes eatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes bathShake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes tailWag{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(-5deg)}}
+@keyframes foodFloat{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-30px) scale(0.5);opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+
+/* hat style */
+.hat{font-size:24px;pointer-events:none;position:absolute;left:50px;top:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
+/* mobile responsiveness */
+@media (max-width:820px){main{flex-direction:column} .shop{order:2;width:100%}}
