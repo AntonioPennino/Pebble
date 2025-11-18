@@ -7,7 +7,7 @@
   "background_color": "#f3faf8",
   "theme_color": "#66cdaa",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "/OtterCare/",
   "icons": [
     {
       "src": "icon-192.png",

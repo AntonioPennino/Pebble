@@ -200,12 +200,19 @@
     <aside class="page-content hidden" id="statsPage">
       <div class="shop">
         <h2>Statistiche</h2>
-        <div style="padding:16px">
+        <div class="stats-content">
           <p><strong>🪙 Monete totali:</strong> <span id="statCoins">0</span></p>
           <p><strong>🎮 Partite giocate:</strong> <span id="statGames">0</span></p>
           <p><strong>🐟 Pesci catturati:</strong> <span id="statFish">0</span></p>
           <p><strong>🎩 Oggetti acquistati:</strong> <span id="statItems">0</span></p>
-          <p style="margin-top:20px;color:#666;font-size:0.9rem">Altre statistiche in arrivo...</p>
+          <div class="analytics-area">
+            <label class="analytics-toggle">
+              <input type="checkbox" id="analyticsOptInToggle" />
+              <span>Attiva statistiche locali anonime (facoltativo)</span>
+            </label>
+            <p id="analyticsSummary" class="analytics-summary">Statistiche opzionali disattivate.</p>
+          </div>
+          <p class="stats-note">Altre statistiche in arrivo...</p>
         </div>
       </div>
     </aside>
@@ -237,18 +244,37 @@
 
   </main>
 
+  <div id="alertBanner" class="alert-banner hidden" role="status" aria-live="polite"></div>
+
+  <div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite">
+    <span>Nuova versione disponibile!</span>
+    <div class="update-actions">
+      <button id="updateReload">Aggiorna</button>
+      <button id="updateDismiss" class="btn-secondary">Più tardi</button>
+    </div>
+  </div>
+
+  <div id="tutorialOverlay" class="tutorial hidden" role="dialog" aria-modal="true">
+    <div class="tutorial-card">
+      <h2>Benvenuto in OtterCare!</h2>
+      <p>Tre dritte per iniziare:</p>
+      <ul>
+        <li>Nutri la lontra, gioca e falla riposare per tenerla sempre felice.</li>
+        <li>Guadagna monete con il mini-gioco dei pesciolini.</li>
+        <li>Personalizza la lontra acquistando accessori nel negozio.</li>
+      </ul>
+      <label class="analytics-toggle tutorial-toggle">
+        <input type="checkbox" id="analyticsOptInTutorial" />
+        <span>Attiva statistiche locali anonime (facoltativo)</span>
+      </label>
+      <button id="tutorialStart" class="tutorial-start">Cominciamo!</button>
+    </div>
+  </div>
+
   <footer>
     <small>Prototipo OtterCare — Apri `index.html` per giocare.</small>
   </footer>
 
-  <script>
-    // Registra Service Worker per PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/OtterCare/sw.js')
-        .then(reg => console.log('SW registrato', reg))
-        .catch(err => console.log('SW errore', err));
-    }
-  </script>
-  <script src="main.js"></script>
+  <script type="module" src="dist/index.js"></script>
 </body>
 </html>

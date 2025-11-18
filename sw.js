@@ -1,11 +1,18 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v1';
+const CACHE_NAME = 'ottercare-v2';
 const urlsToCache = [
   '/OtterCare/',
   '/OtterCare/index.html',
   '/OtterCare/style.css',
-  '/OtterCare/main.js',
-  '/OtterCare/manifest.json'
+  '/OtterCare/manifest.json',
+  '/OtterCare/dist/index.js',
+  '/OtterCare/dist/ui.js',
+  '/OtterCare/dist/state.js',
+  '/OtterCare/dist/audio.js',
+  '/OtterCare/dist/minigame.js',
+  '/OtterCare/dist/gameActions.js',
+  '/OtterCare/dist/analytics.js',
+  '/OtterCare/dist/types.js'
 ];
 
 // Installazione - cache delle risorse
@@ -38,7 +45,6 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
@@ -46,4 +52,10 @@ self.addEventListener('fetch', event => {
       }
     )
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

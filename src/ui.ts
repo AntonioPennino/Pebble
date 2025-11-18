@@ -1,0 +1,407 @@
+import { Mood } from './types';
+import {
+  getState,
+  markCriticalMessage,
+  resetCriticalMessage,
+  resetState,
+  setAnalyticsOptIn,
+  setHatOwned,
+  setTutorialSeen,
+  subscribe
+} from './state.js';
+import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
+import { playSound, resumeAudioContext } from './audio.js';
+import { recordEvent } from './analytics.js';
+import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
+
+const EXPRESSIONS: Record<Mood, { mouth: string; leftBrow: string; rightBrow: string }> = {
+  neutral: {
+    mouth: 'M 54 70 Q 60 73 66 70',
+    leftBrow: 'M 45 45 Q 50 43 55 45',
+    rightBrow: 'M 65 45 Q 70 43 75 45'
+  },
+  happy: {
+    mouth: 'M 54 70 Q 60 76 66 70',
+    leftBrow: 'M 45 47 Q 50 45 55 47',
+    rightBrow: 'M 65 47 Q 70 45 75 47'
+  },
+  sad: {
+    mouth: 'M 54 73 Q 60 70 66 73',
+    leftBrow: 'M 45 43 Q 50 40 55 43',
+    rightBrow: 'M 65 43 Q 70 40 75 43'
+  },
+  sleepy: {
+    mouth: 'M 54 71 Q 60 72 66 71',
+    leftBrow: 'M 45 46 Q 50 44 55 46',
+    rightBrow: 'M 65 46 Q 70 44 75 46'
+  }
+};
+
+const CRITICAL_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', string> = {
+  hunger: 'La lontra è affamatissima! Dagli da mangiare prima che diventi triste.',
+  happy: 'La lontra è triste, falle fare qualcosa di divertente o falle un bagnetto.',
+  clean: 'La lontra è molto sporca. Portala a fare il bagnetto subito!',
+  energy: 'La lontra è esausta. Mettila a dormire per recuperare energia.'
+};
+
+type AlertVariant = 'info' | 'warning';
+
+let currentMood: Mood = 'neutral';
+let alertTimeoutId: number | null = null;
+let updateConfirm: (() => void) | null = null;
+let updateDismiss: (() => void) | null = null;
+
+function $(id: string): HTMLElement | null {
+  return document.getElementById(id);
+}
+
+function setExpression(mood: Mood): void {
+  if (currentMood === mood) {
+    return;
+  }
+  const svg = $('otterSvg');
+  if (!svg) {
+    return;
+  }
+  const expression = EXPRESSIONS[mood] ?? EXPRESSIONS.neutral;
+  const mouth = $('mouth');
+  const leftBrow = $('leftBrow');
+  const rightBrow = $('rightBrow');
+  mouth?.setAttribute('d', expression.mouth);
+  leftBrow?.setAttribute('d', expression.leftBrow);
+  rightBrow?.setAttribute('d', expression.rightBrow);
+
+  svg.classList.remove('happy', 'sad', 'sleepy');
+  if (mood !== 'neutral') {
+    svg.classList.add(mood);
+  }
+  currentMood = mood;
+}
+
+function computeMood(): Mood {
+  const state = getState();
+  if (state.energy < 30) {
+    return 'sleepy';
+  }
+  if (state.happy > 75 && state.hunger > 50) {
+    return 'happy';
+  }
+  if (state.happy < 30 || state.hunger < 20) {
+    return 'sad';
+  }
+  return 'neutral';
+}
+
+function setBar(element: HTMLElement | null, value: number): void {
+  if (!element) {
+    return;
+  }
+  const clamped = Math.max(0, Math.min(100, value));
+  element.style.width = `${clamped}%`;
+  element.classList.remove('low', 'critical');
+  if (clamped < 30) {
+    element.classList.add('low');
+  }
+  if (clamped < 15) {
+    element.classList.add('critical');
+  }
+}
+
+function ensureHat(stateHat: boolean): void {
+  const wrapper = document.querySelector('.otter-wrapper');
+  if (!wrapper) {
+    return;
+  }
+  const existing = wrapper.querySelector('.hat');
+  if (stateHat && !existing) {
+    const hat = document.createElement('div');
+    hat.classList.add('hat');
+    hat.textContent = '🎩';
+    wrapper.appendChild(hat);
+  } else if (!stateHat && existing) {
+    existing.remove();
+  }
+}
+
+function updateStatsView(): void {
+  const state = getState();
+  $('statCoins')!.textContent = String(state.coins);
+  $('statGames')!.textContent = String(state.stats.gamesPlayed);
+  $('statFish')!.textContent = String(state.stats.fishCaught);
+  $('statItems')!.textContent = String(state.stats.itemsBought);
+  const analyticsSummary = $('analyticsSummary');
+  if (analyticsSummary) {
+    const entries = Object.entries(state.analytics.events);
+    analyticsSummary.textContent = entries.length
+      ? entries.map(([key, value]) => `${key}: ${value}`).join(' · ')
+      : 'Statistiche opzionali disattivate.';
+  }
+}
+
+function showAlert(message: string, variant: AlertVariant = 'warning'): void {
+  const banner = $('alertBanner');
+  if (!banner) {
+    return;
+  }
+  banner.textContent = message;
+  banner.dataset.variant = variant;
+  banner.classList.remove('hidden');
+  if (alertTimeoutId !== null) {
+    window.clearTimeout(alertTimeoutId);
+  }
+  alertTimeoutId = window.setTimeout(() => {
+    banner.classList.add('hidden');
+  }, 5000);
+}
+
+function evaluateCriticalWarnings(): void {
+  const state = getState();
+  (['hunger', 'happy', 'clean', 'energy'] as const).forEach(key => {
+    const value = state[key];
+    if (value < 15 && !state.criticalHintsShown[key]) {
+      markCriticalMessage(key);
+      showAlert(CRITICAL_MESSAGES[key]);
+      recordEvent(`avviso:${key}`);
+    } else if (value > 40 && state.criticalHintsShown[key]) {
+      resetCriticalMessage(key);
+    }
+  });
+}
+
+function render(): void {
+  const state = getState();
+  setBar($('hungerBar'), state.hunger);
+  setBar($('happyBar'), state.happy);
+  setBar($('cleanBar'), state.clean);
+  setBar($('energyBar'), state.energy);
+  $('coins')!.textContent = String(state.coins);
+  ensureHat(state.hat);
+  setExpression(computeMood());
+  updateStatsView();
+  evaluateCriticalWarnings();
+  updateAnalyticsToggle(state.analyticsOptIn);
+}
+
+function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
+  const svg = $('otterSvg');
+  if (!svg) {
+    return;
+  }
+  if (animation === 'feed') {
+    svg.classList.add('hop', 'eating', 'feeding');
+    window.setTimeout(() => svg.classList.remove('hop', 'eating', 'feeding'), 1500);
+  } else if (animation === 'bathe') {
+    svg.classList.add('bathing');
+    window.setTimeout(() => svg.classList.remove('bathing'), 1600);
+  } else if (animation === 'sleep') {
+    svg.classList.add('rest');
+    window.setTimeout(() => svg.classList.remove('rest'), 4000);
+  }
+}
+
+function initActionButtons(): void {
+  $('feedBtn')?.addEventListener('click', () => {
+    resumeAudioContext();
+    feedAction();
+    triggerOtterAnimation('feed');
+    playSound('feed');
+  });
+
+  $('bathBtn')?.addEventListener('click', () => {
+    resumeAudioContext();
+    batheAction();
+    triggerOtterAnimation('bathe');
+    playSound('splash');
+  });
+
+  $('sleepBtn')?.addEventListener('click', () => {
+    resumeAudioContext();
+    sleepAction();
+    triggerOtterAnimation('sleep');
+  });
+
+  $('playBtn')?.addEventListener('click', () => {
+    resumeAudioContext();
+    playSound('happy');
+    openMiniGame();
+  });
+
+  $('resetBtn')?.addEventListener('click', () => {
+    const confirmed = window.confirm('Sei sicuro di voler ricominciare da zero?');
+    if (confirmed) {
+      resetState();
+      recordEvent('reset');
+      render();
+      showAlert('Nuova lontra creata. Prenditene cura!', 'info');
+    }
+  });
+}
+
+function initShop(): void {
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.buy');
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const price = Number(button.dataset.price ?? '0');
+      const item = button.dataset.item ?? 'item';
+      if (spendCoins(price)) {
+        if (item === 'hat') {
+          setHatOwned(true);
+        }
+        rewardItemPurchase(item);
+        render();
+        showAlert('Acquisto completato! Trovi il nuovo oggetto sulla lontra.', 'info');
+      } else {
+        window.alert('Monete insufficienti. Gioca per guadagnarne di più!');
+      }
+    });
+  });
+}
+
+function initNavigation(): void {
+  const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-btn'));
+  const pages: Record<string, HTMLElement | null> = {
+    home: $('mainInfo'),
+    shop: $('shopPage'),
+    stats: $('statsPage')
+  };
+
+  navButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const page = button.dataset.page ?? 'home';
+      navButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      Object.entries(pages).forEach(([key, element]) => {
+        if (!element) {
+          return;
+        }
+        if (key === page) {
+          element.classList.remove('hidden');
+          if (key === 'shop') {
+            element.classList.add('active');
+          }
+        } else {
+          element.classList.add('hidden');
+          element.classList.remove('active');
+        }
+      });
+    });
+  });
+}
+
+function initBlink(): void {
+  window.setInterval(() => {
+    const svg = $('otterSvg');
+    if (!svg || isMiniGameRunning()) {
+      return;
+    }
+    svg.classList.add('blink');
+    window.setTimeout(() => svg.classList.remove('blink'), 180);
+  }, 4000 + Math.random() * 2000);
+}
+
+function updateAnalyticsToggle(optIn: boolean): void {
+  const toggle = $('analyticsOptInToggle') as HTMLInputElement | null;
+  if (toggle) {
+    toggle.checked = optIn;
+  }
+  const tutorialToggle = $('analyticsOptInTutorial') as HTMLInputElement | null;
+  if (tutorialToggle) {
+    tutorialToggle.checked = optIn;
+  }
+}
+
+function initAnalyticsToggle(): void {
+  const toggle = $('analyticsOptInToggle') as HTMLInputElement | null;
+  if (!toggle) {
+    return;
+  }
+  toggle.addEventListener('change', () => {
+    setAnalyticsOptIn(toggle.checked);
+    const message = toggle.checked
+      ? 'Statistiche locali attivate. I dati restano sul tuo dispositivo.'
+      : 'Statistiche locali disattivate.';
+    showAlert(message, 'info');
+  });
+}
+
+function initTutorial(): void {
+  const overlay = $('tutorialOverlay');
+  const startBtn = $('tutorialStart');
+  const analyticsToggle = $('analyticsOptInTutorial') as HTMLInputElement | null;
+  if (!overlay || !startBtn || !analyticsToggle) {
+    return;
+  }
+
+  const tutorialSeen = getState().tutorialSeen;
+  if (tutorialSeen) {
+    overlay.classList.add('hidden');
+    return;
+  }
+
+  overlay.classList.remove('hidden');
+  document.body.classList.add('overlay-active');
+
+  startBtn.addEventListener('click', () => {
+    setTutorialSeen();
+    setAnalyticsOptIn(analyticsToggle.checked);
+    overlay.classList.add('hidden');
+    document.body.classList.remove('overlay-active');
+    recordEvent('tutorial:completato');
+    showAlert('Benvenuto in OtterCare! Prenditi cura della tua lontra 🦦', 'info');
+  }, { once: true });
+}
+
+function initUpdateBanner(): void {
+  const banner = $('updateBanner');
+  const accept = $('updateReload');
+  const dismiss = $('updateDismiss');
+  if (!banner || !accept || !dismiss) {
+    return;
+  }
+
+  accept.addEventListener('click', () => {
+    updateConfirm?.();
+  });
+
+  dismiss.addEventListener('click', () => {
+    banner.classList.add('hidden');
+    updateDismiss?.();
+  });
+}
+
+export function prepareUpdatePrompt(onConfirm: () => void, onDismiss: () => void): void {
+  updateConfirm = onConfirm;
+  updateDismiss = onDismiss;
+  const banner = $('updateBanner');
+  if (!banner) {
+    return;
+  }
+  banner.classList.remove('hidden');
+  showAlert('Nuova versione disponibile! Premi Aggiorna per ricaricare.', 'info');
+}
+
+export function initUI(): void {
+  initActionButtons();
+  initShop();
+  initNavigation();
+  initBlink();
+  initAnalyticsToggle();
+  initTutorial();
+  initUpdateBanner();
+
+  initMiniGame({
+    overlay: $('overlay')!,
+    area: $('fishArea')!,
+    score: $('miniScore')!,
+    closeButton: $('closeMini')!
+  }, {
+    onFinish: score => {
+      showAlert(`Mini-gioco terminato! Hai catturato ${score} pesci.`, 'info');
+    }
+  });
+
+  subscribe(() => render());
+  render();
+
+  document.addEventListener('click', () => resumeAudioContext(), { once: true });
+}

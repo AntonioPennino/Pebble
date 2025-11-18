@@ -100,6 +100,33 @@ main{
 .buy{padding:8px 16px;border-radius:8px;font-size:0.9rem;white-space:nowrap;background:var(--accent);color:white;border:none;cursor:pointer;font-weight:600}
 .buy:hover{background:#5bb899}
 
+.stats-content{padding:16px;display:flex;flex-direction:column;gap:12px}
+.analytics-area{margin-top:12px;padding:12px;border-radius:10px;background:#f2f7f5;border:1px dashed rgba(102,205,170,0.35)}
+.analytics-toggle{display:flex;align-items:center;gap:10px;color:#33605a;font-size:0.9rem}
+.analytics-toggle input{width:18px;height:18px;accent-color:var(--accent)}
+.analytics-summary{margin:8px 0 0;font-size:0.85rem;color:#5f6d69}
+.stats-note{margin-top:18px;color:#666;font-size:0.9rem}
+
+.alert-banner{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--card);padding:10px 18px;border-radius:999px;box-shadow:0 12px 30px rgba(0,0,0,0.15);z-index:1400;font-weight:600;color:#1b4f4b;max-width:90%;text-align:center}
+.alert-banner[data-variant="warning"]{background:#ffe9e3;color:#a44932}
+.alert-banner[data-variant="info"]{background:#e0f5ef;color:#1f675b}
+
+.update-banner{position:fixed;bottom:calc(70px + 16px);left:50%;transform:translateX(-50%);background:var(--card);padding:12px 16px;border-radius:14px;box-shadow:0 -8px 24px rgba(0,0,0,0.12);display:flex;align-items:center;gap:16px;max-width:420px;width:calc(100% - 32px);z-index:1300}
+.update-actions{display:flex;gap:8px}
+.update-banner button{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+.update-banner .btn-secondary{background:#f5f5f5;color:#333;border:1px solid rgba(0,0,0,0.08)}
+
+.tutorial{position:fixed;inset:0;background:rgba(9,35,32,0.78);display:flex;align-items:center;justify-content:center;z-index:2000;padding:24px}
+.tutorial-card{background:#ffffff;border-radius:18px;padding:24px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 60px rgba(0,0,0,0.2)}
+.tutorial-card h2{margin:0;font-size:1.4rem;color:#2c4b47}
+.tutorial-card ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:#3d5a56;font-size:0.95rem}
+.tutorial-start{background:var(--accent);color:#fff;border:none;padding:12px;border-radius:10px;font-weight:600;cursor:pointer}
+.tutorial-start:hover{background:#5bb899}
+.tutorial-toggle{display:flex;align-items:center;gap:10px;color:#2f5b55;font-size:0.9rem}
+.tutorial-toggle input{width:18px;height:18px;accent-color:var(--accent)}
+
+body.overlay-active{overflow:hidden}
+
 /* Page content */
 .page-content{
   width:100%;
@@ -248,6 +275,10 @@ footer{padding:6px;text-align:center;font-size:0.8rem;margin-top:10px;color:var(
   footer{font-size:0.75rem}
   .bottom-nav{display:flex}
   body{padding-bottom:70px}
+  .update-banner{flex-direction:column;align-items:stretch;gap:12px;text-align:center}
+  .update-actions{width:100%;justify-content:center}
+  .update-banner button{width:100%}
+  .alert-banner{max-width:95%;top:12px}
 }
 
 /* Landscape mobile */
