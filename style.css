@@ -162,6 +162,7 @@ main {
 
 .progress-fill {
   height: 100%;
+  width: 100%;
   border-radius: 10px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -360,8 +361,8 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   left: 0;
   right: 0;
   background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   padding: 10px 20px;
   padding-bottom: max(10px, var(--safe-area-bottom));
   display: flex;
@@ -403,6 +404,7 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.6);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -458,6 +460,7 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   position: absolute;
   font-size: 2rem;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   animation: swim 3s linear infinite;
 }
@@ -592,6 +595,23 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+#otterSvg #mouth {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+#otterSvg #eyes circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+#otterSvg #foodItem {
+  transform-origin: center;
+  transform-box: fill-box;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
 #otterSvg.hop {
   animation: hop 0.5s ease;
 }
@@ -606,8 +626,13 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 }
 
 @keyframes chew {
-  0%, 100% { d: path("M190,130 Q200,140 210,130"); }
-  50% { d: path("M190,135 Q200,145 210,135"); }
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(4px) scaleY(0.75); }
+}
+
+#otterSvg.feeding #foodItem {
+  opacity: 1;
+  transform: translateY(-6px);
 }
 
 #otterSvg.bathing {
@@ -618,6 +643,34 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   0%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(-5deg); }
   75% { transform: rotate(5deg); }
+}
+
+#otterSvg.blink #eyeLeft circle:first-child,
+#otterSvg.blink #eyeRight circle:first-child {
+  transform: scaleY(0.1);
+}
+
+#otterSvg.blink #eyeLeft circle:last-child,
+#otterSvg.blink #eyeRight circle:last-child {
+  opacity: 0;
+}
+
+#otterSvg.happy #blush {
+  opacity: 0.8;
+}
+
+#otterSvg.sad #blush {
+  opacity: 0.2;
+}
+
+#otterSvg.sleepy #eyeLeft circle:first-child,
+#otterSvg.sleepy #eyeRight circle:first-child {
+  transform: scaleY(0.4);
+}
+
+#otterSvg.sleepy #eyeLeft circle:last-child,
+#otterSvg.sleepy #eyeRight circle:last-child {
+  opacity: 0.5;
 }
 
 /* Responsive adjustments */
@@ -678,6 +731,7 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   cursor: pointer;
   animation: swim 3s linear infinite;
   transition: transform 0.1s;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -695,6 +749,7 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   font-size: 2rem;
   cursor: pointer;
   animation: float 4s ease-in-out infinite;
+  -webkit-user-select: none;
   user-select: none;
 }
 

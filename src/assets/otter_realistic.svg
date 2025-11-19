@@ -49,10 +49,12 @@
       <circle cx="200" cy="100" r="70" fill="url(#furGradient)"/>
       
       <!-- Ears -->
-      <circle cx="140" cy="70" r="15" fill="#5D4037"/>
-      <circle cx="260" cy="70" r="15" fill="#5D4037"/>
-      <circle cx="140" cy="70" r="8" fill="#8D6E63"/>
-      <circle cx="260" cy="70" r="8" fill="#8D6E63"/>
+      <g id="ears">
+        <circle cx="140" cy="70" r="15" fill="#5D4037"/>
+        <circle cx="260" cy="70" r="15" fill="#5D4037"/>
+        <circle cx="140" cy="70" r="8" fill="#8D6E63"/>
+        <circle cx="260" cy="70" r="8" fill="#8D6E63"/>
+      </g>
 
       <!-- Face Patch -->
       <ellipse cx="200" cy="115" rx="50" ry="40" fill="#D7CCC8" opacity="0.9"/>
@@ -68,6 +70,10 @@
           <circle cx="227" cy="98" r="3" fill="#FFFFFF"/>
         </g>
       </g>
+
+      <!-- Eyebrows -->
+      <path id="leftBrow" d="M160,80 Q170,75 180,80" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+      <path id="rightBrow" d="M220,80 Q230,75 240,80" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
 
       <!-- Nose -->
       <path d="M190,120 Q200,115 210,120 Q200,135 190,120" fill="#3E2723"/>
@@ -88,6 +94,27 @@
          <circle cx="160" cy="125" r="10" fill="#FFAB91" opacity="0.6"/>
          <circle cx="240" cy="125" r="10" fill="#FFAB91" opacity="0.6"/>
       </g>
+
+      <!-- Sunglasses (toggle) -->
+      <g id="sunglassesItem" opacity="0">
+        <rect x="148" y="86" width="46" height="28" rx="8" fill="#2C2C2C" stroke="#555" stroke-width="2"/>
+        <rect x="206" y="86" width="46" height="28" rx="8" fill="#2C2C2C" stroke="#555" stroke-width="2"/>
+        <line x1="194" y1="100" x2="206" y2="100" stroke="#2C2C2C" stroke-width="4"/>
+        <line x1="148" y1="100" x2="132" y2="94" stroke="#2C2C2C" stroke-width="4"/>
+        <line x1="252" y1="100" x2="268" y2="94" stroke="#2C2C2C" stroke-width="4"/>
+      </g>
+
+      <!-- Food Item (shown during anim) -->
+      <g id="foodItem" opacity="0" transform="translate(200, 150)">
+        <circle r="12" fill="#FF7043" stroke="#E64A19" stroke-width="2"/>
+      </g>
     </g>
+  </g>
+
+  <!-- Scarf (toggle) -->
+  <g id="scarfItem" opacity="0">
+    <path d="M150,140 Q200,160 250,140 Q260,155 250,165 Q200,185 150,165 Q140,155 150,140" fill="#EF5350"/>
+    <path d="M170,160 L170,205 L195,205 L195,160" fill="#EF5350"/>
+    <line x1="170" y1="198" x2="195" y2="198" stroke="#B71C1C" stroke-width="3"/>
   </g>
 </svg>

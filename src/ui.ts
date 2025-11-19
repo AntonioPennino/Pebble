@@ -287,31 +287,42 @@ function initShop(): void {
 
 function initNavigation(): void {
   const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-item'));
-  const pages: Record<string, HTMLElement | null> = {
+  const pages = {
     home: $('homePage'),
     shop: $('shopPage'),
     stats: $('statsPage')
+  } satisfies Record<'home' | 'shop' | 'stats', HTMLElement | null>;
+
+  type PageKey = keyof typeof pages;
+
+  const showPage = (page: PageKey): void => {
+    navButtons.forEach(btn => {
+      const isActive = btn.dataset.page === page;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    (Object.entries(pages) as Array<[PageKey, HTMLElement | null]>).forEach(([key, element]) => {
+      if (!element) {
+        return;
+      }
+      const isVisible = key === page;
+      element.classList.toggle('hidden', !isVisible);
+      element.classList.toggle('active', isVisible);
+      element.setAttribute('aria-hidden', String(!isVisible));
+    });
+
+    recordEvent(`nav:${page}`);
   };
 
   navButtons.forEach(button => {
     button.addEventListener('click', () => {
-      const page = button.dataset.page ?? 'home';
-      navButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      Object.entries(pages).forEach(([key, element]) => {
-        if (!element) {
-          return;
-        }
-        if (key === page) {
-          element.classList.remove('hidden');
-          element.classList.add('active');
-        } else {
-          element.classList.add('hidden');
-          element.classList.remove('active');
-        }
-      });
+      const target = (button.dataset.page ?? 'home') as PageKey;
+      showPage(target);
     });
   });
+
+  showPage('home');
 }
 
 function initBlink(): void {
