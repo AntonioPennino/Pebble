@@ -16,24 +16,24 @@ import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 
 const EXPRESSIONS: Record<Mood, { mouth: string; leftBrow: string; rightBrow: string }> = {
   neutral: {
-    mouth: 'M 54 70 Q 60 73 66 70',
-    leftBrow: 'M 45 45 Q 50 43 55 45',
-    rightBrow: 'M 65 45 Q 70 43 75 45'
+    mouth: 'M190,130 Q200,140 210,130',
+    leftBrow: 'M165,85 Q175,80 185,85',
+    rightBrow: 'M215,85 Q225,80 235,85'
   },
   happy: {
-    mouth: 'M 54 70 Q 60 76 66 70',
-    leftBrow: 'M 45 47 Q 50 45 55 47',
-    rightBrow: 'M 65 47 Q 70 45 75 47'
+    mouth: 'M190,130 Q200,145 210,130',
+    leftBrow: 'M165,82 Q175,78 185,82',
+    rightBrow: 'M215,82 Q225,78 235,82'
   },
   sad: {
-    mouth: 'M 54 73 Q 60 70 66 73',
-    leftBrow: 'M 45 43 Q 50 40 55 43',
-    rightBrow: 'M 65 43 Q 70 40 75 43'
+    mouth: 'M190,140 Q200,130 210,140',
+    leftBrow: 'M165,88 Q175,92 185,88',
+    rightBrow: 'M215,88 Q225,92 235,88'
   },
   sleepy: {
-    mouth: 'M 54 71 Q 60 72 66 71',
-    leftBrow: 'M 45 46 Q 50 44 55 46',
-    rightBrow: 'M 65 46 Q 70 44 75 46'
+    mouth: 'M195,135 Q200,135 205,135',
+    leftBrow: 'M165,85 Q175,85 185,85',
+    rightBrow: 'M215,85 Q225,85 235,85'
   }
 };
 
@@ -238,7 +238,7 @@ function initActionButtons(): void {
 }
 
 function initShop(): void {
-  const buttons = document.querySelectorAll<HTMLButtonElement>('.buy');
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.buy-btn');
   buttons.forEach(button => {
     button.addEventListener('click', () => {
       const price = Number(button.dataset.price ?? '0');
@@ -258,7 +258,7 @@ function initShop(): void {
 }
 
 function initNavigation(): void {
-  const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-btn'));
+  const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-item'));
   const pages: Record<string, HTMLElement | null> = {
     home: $('mainInfo'),
     shop: $('shopPage'),
