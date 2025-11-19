@@ -304,9 +304,7 @@ function initNavigation(): void {
         }
         if (key === page) {
           element.classList.remove('hidden');
-          if (key === 'shop') {
-            element.classList.add('active');
-          }
+          element.classList.add('active');
         } else {
           element.classList.add('hidden');
           element.classList.remove('active');
