@@ -6,23 +6,23 @@ import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 const EXPRESSIONS = {
     neutral: {
         mouth: 'M190,130 Q200,140 210,130',
-        leftBrow: 'M165,85 Q175,80 185,85',
-        rightBrow: 'M215,85 Q225,80 235,85'
+        leftBrow: 'M160,80 Q170,75 180,80',
+        rightBrow: 'M220,80 Q230,75 240,80'
     },
     happy: {
         mouth: 'M190,130 Q200,145 210,130',
-        leftBrow: 'M165,82 Q175,78 185,82',
-        rightBrow: 'M215,82 Q225,78 235,82'
+        leftBrow: 'M160,77 Q170,72 180,77',
+        rightBrow: 'M220,77 Q230,72 240,77'
     },
     sad: {
         mouth: 'M190,140 Q200,130 210,140',
-        leftBrow: 'M165,88 Q175,92 185,88',
-        rightBrow: 'M215,88 Q225,92 235,88'
+        leftBrow: 'M160,83 Q170,88 180,83',
+        rightBrow: 'M220,83 Q230,88 240,83'
     },
     sleepy: {
         mouth: 'M195,135 Q200,135 205,135',
-        leftBrow: 'M165,85 Q175,85 185,85',
-        rightBrow: 'M215,85 Q225,85 235,85'
+        leftBrow: 'M160,80 Q170,80 180,80',
+        rightBrow: 'M220,80 Q230,80 240,80'
     }
 };
 const CRITICAL_MESSAGES = {
@@ -232,7 +232,7 @@ function initShop() {
 function initNavigation() {
     const navButtons = Array.from(document.querySelectorAll('.nav-item'));
     const pages = {
-        home: $('mainInfo'),
+        home: $('homePage'),
         shop: $('shopPage'),
         stats: $('statsPage')
     };
