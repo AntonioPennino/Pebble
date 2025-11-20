@@ -34,6 +34,18 @@
 
   <main>
     <section id="homePage" class="page-content active" aria-hidden="false">
+      <div class="otter-container">
+        <div class="otter-wrapper" aria-live="polite">
+          <img
+            id="otterImage"
+            class="otter-img"
+            src="src/assets/otter/otter_neutral.png"
+            alt="La tua lontra"
+          />
+          <div id="accessories-container" aria-hidden="true"></div>
+        </div>
+      </div>
+
       <div class="status-container" role="list">
         <div class="status-item" role="listitem">
           <div class="status-icon" aria-hidden="true">🍗</div>
@@ -55,6 +67,16 @@
         </div>
         <div class="status-item" role="listitem">
           <div class="status-icon" aria-hidden="true">⚡</div>
+          <div class="progress-bar" aria-label="Energia">
+            <div id="energyBar" class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-grid" role="group" aria-label="Azioni">
+        <button id="feedBtn" class="action-btn">
+          <span class="btn-icon" aria-hidden="true">🍤</span>
+          <span class="btn-label">Nutri</span>
         </button>
         <button id="playBtn" class="action-btn">
           <span class="btn-icon" aria-hidden="true">🎾</span>
