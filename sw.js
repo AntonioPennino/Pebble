@@ -1,5 +1,5 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v5';
+const CACHE_NAME = 'ottercare-v6';
 const urlsToCache = [
   './',
   './index.html',
@@ -13,7 +13,16 @@ const urlsToCache = [
   './dist/minigame.js',
   './dist/gameActions.js',
   './dist/analytics.js',
-  './dist/types.js'
+  './dist/types.js',
+  './src/assets/otter/otter_neutral.png',
+  './src/assets/otter/otter_happy.png',
+  './src/assets/otter/otter_sad.png',
+  './src/assets/otter/otter_sleep.png',
+  './src/assets/otter/otter_eat.png',
+  './src/assets/otter/otter_bath.png',
+  './src/assets/otter/hat.png',
+  './src/assets/otter/sunglasses.png',
+  './src/assets/otter/scarf.png'
 ];
 
 // Installazione - cache delle risorse
