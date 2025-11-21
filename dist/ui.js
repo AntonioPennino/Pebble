@@ -342,7 +342,10 @@ function initTutorial() {
         setTutorialSeen();
         setAnalyticsOptIn(analyticsToggle.checked);
         overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('overlay-active');
+        const focusTarget = $('feedBtn');
+        focusTarget?.focus();
         recordEvent('tutorial:completato');
         showAlert('Benvenuto in OtterCare! Prenditi cura della tua lontra 🦦', 'info');
     }, { once: true });
