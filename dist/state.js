@@ -12,6 +12,7 @@ function createDefaultState() {
         coins: 0,
         petName: 'OtterCare',
         petNameConfirmed: false,
+        installPromptDismissed: false,
         hat: false,
         sunglasses: false,
         scarf: false,
@@ -36,10 +37,19 @@ function mergeState(partial) {
     if (!partial) {
         return defaults;
     }
-    const merged = {
+    return {
         ...defaults,
         ...partial,
         version: STATE_VERSION,
+        petName: typeof partial.petName === 'string' && partial.petName.trim().length
+            ? partial.petName.replace(/[<>]/g, '').trim().slice(0, 24)
+            : defaults.petName,
+        petNameConfirmed: typeof partial.petNameConfirmed === 'boolean'
+            ? partial.petNameConfirmed
+            : false,
+        installPromptDismissed: typeof partial.installPromptDismissed === 'boolean'
+            ? partial.installPromptDismissed
+            : defaults.installPromptDismissed,
         stats: {
             ...defaults.stats,
             ...(partial.stats ?? {})
@@ -57,13 +67,6 @@ function mergeState(partial) {
             ...(partial.criticalHintsShown ?? {})
         }
     };
-    merged.petName = typeof partial.petName === 'string' && partial.petName.trim().length
-        ? partial.petName.replace(/[<>]/g, '').trim().slice(0, 24)
-        : defaults.petName;
-    merged.petNameConfirmed = typeof partial.petNameConfirmed === 'boolean'
-        ? partial.petNameConfirmed
-        : false;
-    return merged;
 }
 export function getState() {
     return state;
@@ -174,10 +177,15 @@ export function setScarfOwned(value) {
     });
 }
 export function setPetName(name) {
-    const sanitized = (name ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    const sanitized = name.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
     updateState(draft => {
         draft.petName = sanitized.length ? sanitized : 'OtterCare';
         draft.petNameConfirmed = true;
+    });
+}
+export function setInstallPromptDismissed(value) {
+    updateState(draft => {
+        draft.installPromptDismissed = value;
     });
 }
 export function setTutorialSeen() {

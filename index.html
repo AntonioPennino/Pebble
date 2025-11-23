@@ -16,6 +16,10 @@
   <meta name="twitter:description" content="Prenditi cura della tua lontra virtuale!" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="OtterCare" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -242,6 +246,17 @@
     <span>Nuovo aggiornamento!</span>
     <button id="updateReload" class="small-btn">Aggiorna</button>
     <button id="updateDismiss" class="icon-btn" aria-label="Chiudi avviso">✕</button>
+  </div>
+
+  <div id="installBanner" class="toast install-toast hidden" role="dialog" aria-live="assertive">
+    <div class="install-text">
+      <strong>Installa OtterCare</strong>
+      <span>Scarica l'app per averla sempre a portata di tap!</span>
+    </div>
+    <div class="install-actions">
+      <button id="installDismiss" class="icon-btn" aria-label="Chiudi avviso">✕</button>
+      <button id="installConfirm" class="small-btn">Installa</button>
+    </div>
   </div>
 
   <nav class="bottom-nav" id="bottomNav">

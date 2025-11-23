@@ -709,6 +709,38 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   justify-content: space-between;
 }
 
+.install-toast {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-main);
+  padding: 16px 20px;
+  border-radius: 20px;
+  bottom: 120px;
+  width: calc(100% - 40px);
+  max-width: 420px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.install-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+.install-text strong {
+  font-size: 1.05rem;
+  color: var(--primary-dark);
+}
+
+.install-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .small-btn {
   background: var(--accent);
   color: white;
@@ -853,6 +885,13 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   .status-container {
     grid-template-columns: 1fr;
     padding: 16px;
+  }
+
+  .install-toast {
+    bottom: 110px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    text-align: left;
   }
 
   .actions-grid {

@@ -27,6 +27,7 @@ export interface GameState {
   coins: number;
   petName: string;
   petNameConfirmed: boolean;
+  installPromptDismissed: boolean;
   hat: boolean;
   sunglasses: boolean;
   scarf: boolean;

@@ -5,6 +5,7 @@ import {
   resetCriticalMessage,
   resetState,
   setAnalyticsOptIn,
+  setInstallPromptDismissed,
   setPetName,
   setHatOwned,
   setSunglassesOwned,
@@ -67,6 +68,11 @@ const CRITICAL_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', string>
 
 type AlertVariant = 'info' | 'warning';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 let currentMood: Mood = 'neutral';
 let currentOutfit: OutfitKey = 'base';
 let hasRenderedOnce = false;
@@ -74,6 +80,8 @@ let alertTimeoutId: number | null = null;
 let updateConfirm: (() => void) | null = null;
 let updateDismiss: (() => void) | null = null;
 let hasFocusedNamePrompt = false;
+let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
+let installBannerVisible = false;
 
 function $(id: string): HTMLElement | null {
   return document.getElementById(id);
@@ -85,6 +93,30 @@ function toggleOverlayVisibility(element: HTMLElement | null, show: boolean): vo
   }
   element.classList.toggle('hidden', !show);
   element.setAttribute('aria-hidden', String(!show));
+}
+
+function showInstallBanner(): void {
+  if (installBannerVisible) {
+    return;
+  }
+  const banner = $('installBanner');
+  if (!banner) {
+    return;
+  }
+  banner.classList.remove('hidden');
+  installBannerVisible = true;
+}
+
+function hideInstallBanner(): void {
+  if (!installBannerVisible) {
+    return;
+  }
+  const banner = $('installBanner');
+  if (!banner) {
+    return;
+  }
+  banner.classList.add('hidden');
+  installBannerVisible = false;
 }
 
 function setExpression(mood: Mood, accessories: AccessoryState): void {
@@ -374,10 +406,30 @@ function initNavigation(): void {
     button.addEventListener('click', () => {
       const target = (button.dataset.page ?? 'home') as PageKey;
       showPage(target);
+      window.location.hash = target === 'home' ? '' : `#${target}`;
     });
   });
 
-  showPage('home');
+  const applyHash = (): void => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'shop' || hash === 'stats') {
+      showPage(hash as PageKey);
+      return;
+    }
+    if (hash === 'home' || hash === '') {
+      showPage('home');
+      return;
+    }
+    if (hash === 'play') {
+      showPage('home');
+      window.setTimeout(() => $('playBtn')?.click(), 300);
+      return;
+    }
+    showPage('home');
+  };
+
+  window.addEventListener('hashchange', applyHash);
+  applyHash();
 }
 
 function initBlink(): void {
@@ -413,6 +465,54 @@ function initAnalyticsToggle(): void {
       ? 'Statistiche locali attivate. I dati restano sul tuo dispositivo.'
       : 'Statistiche locali disattivate.';
     showAlert(message, 'info');
+  });
+}
+
+function initInstallPrompt(): void {
+  const installButton = $('installConfirm') as HTMLButtonElement | null;
+  const dismissButton = $('installDismiss') as HTMLButtonElement | null;
+
+  dismissButton?.addEventListener('click', () => {
+    hideInstallBanner();
+    setInstallPromptDismissed(true);
+    recordEvent('pwa:promptDismissed');
+  });
+
+  installButton?.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) {
+      showAlert('Installazione non disponibile. Usa il menu del browser per aggiungere OtterCare.', 'warning');
+      return;
+    }
+    try {
+      await deferredInstallPrompt.prompt();
+      const outcome = await deferredInstallPrompt.userChoice;
+      recordEvent(`pwa:${outcome.outcome}`);
+      if (outcome.outcome === 'accepted') {
+        showAlert('OtterCare è stata aggiunta alla tua schermata Home! 🦦', 'info');
+      }
+    } finally {
+      deferredInstallPrompt = null;
+      hideInstallBanner();
+      setInstallPromptDismissed(true);
+    }
+  });
+
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredInstallPrompt = event as BeforeInstallPromptEvent;
+    if (getState().installPromptDismissed) {
+      return;
+    }
+    showInstallBanner();
+    recordEvent('pwa:promptShown');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    hideInstallBanner();
+    setInstallPromptDismissed(true);
+    recordEvent('pwa:installed');
+    showAlert('Installazione completata! Trovi OtterCare tra le tue app.', 'info');
   });
 }
 
@@ -499,6 +599,7 @@ export function initUI(): void {
   initNavigation();
   initBlink();
   initAnalyticsToggle();
+  initInstallPrompt();
   initNamePrompt();
   initTutorial();
   initUpdateBanner();

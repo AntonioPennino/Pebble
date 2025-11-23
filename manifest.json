@@ -1,8 +1,53 @@
+{
+  "name": "OtterCare — Gioco di cura della lontra",
+  "short_name": "OtterCare",
+  "description": "Prenditi cura della tua adorabile lontra virtuale: nutri, gioca, pulisci e fai crescere la tua nuova amica!",
+  "lang": "it-IT",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDFBF7",
+  "theme_color": "#8D6E63",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "src/assets/otter/otter_happy.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "label": "Lontra felice"
     }
   ],
   "categories": [
     "games",
     "entertainment"
   ],
-  "lang": "it-IT"
+  "shortcuts": [
+    {
+      "name": "Apri minigioco",
+      "short_name": "Minigioco",
+      "url": "./index.html#play",
+      "description": "Vai direttamente al minigioco per catturare i pesci"
+    }
+  ]
 }

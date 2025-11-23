@@ -18,6 +18,7 @@ function createDefaultState(): GameState {
     coins: 0,
     petName: 'OtterCare',
     petNameConfirmed: false,
+    installPromptDismissed: false,
     hat: false,
     sunglasses: false,
     scarf: false,
@@ -55,6 +56,9 @@ function mergeState(partial: Partial<GameState> | null | undefined): GameState {
     petNameConfirmed: typeof partial.petNameConfirmed === 'boolean'
       ? partial.petNameConfirmed
       : false,
+    installPromptDismissed: typeof partial.installPromptDismissed === 'boolean'
+      ? partial.installPromptDismissed
+      : defaults.installPromptDismissed,
     stats: {
       ...defaults.stats,
       ...(partial.stats ?? {})
@@ -205,6 +209,12 @@ export function setPetName(name: string): void {
   updateState(draft => {
     draft.petName = sanitized.length ? sanitized : 'OtterCare';
     draft.petNameConfirmed = true;
+  });
+}
+
+export function setInstallPromptDismissed(value: boolean): void {
+  updateState(draft => {
+    draft.installPromptDismissed = value;
   });
 }
 
