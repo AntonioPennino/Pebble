@@ -109,7 +109,7 @@ main {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: calc(var(--bottom-nav-height) + 32px + var(--safe-area-bottom));
+  padding-bottom: calc(var(--bottom-nav-height) + 140px + var(--safe-area-bottom));
   scroll-behavior: smooth;
 }
 
@@ -120,7 +120,7 @@ main {
   width: 100%;
   margin: 0 auto;
   animation: fadeIn 0.3s ease;
-  padding-bottom: 88px;
+  padding-bottom: 120px;
 }
 
 .page-content.active {
@@ -134,7 +134,7 @@ main {
 
 /* Home Page - Game Area */
 #homePage {
-  padding-bottom: 112px;
+  padding-bottom: 140px;
 }
 
 .otter-container {
@@ -176,7 +176,7 @@ main {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .status-item {
@@ -213,14 +213,14 @@ main {
 /* Actions Grid */
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
-  gap: 14px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
 .action-btn {
   background: var(--card-bg);
-  padding: 14px;
+  padding: 12px;
   border-radius: 20px;
   box-shadow: var(--card-shadow);
   display: flex;
@@ -228,6 +228,7 @@ main {
   align-items: center;
   gap: 8px;
   transition: transform 0.1s, box-shadow 0.1s;
+  min-height: 96px;
 }
 
 .action-btn:active {
@@ -709,6 +710,7 @@ input[type="checkbox"]:checked + .toggle-switch::after {
     max-width: 1000px;
     margin: 0 auto;
     align-items: flex-start;
+    padding-bottom: 40px;
   }
 
   .page-content {
@@ -745,8 +747,8 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   }
 
   .actions-grid {
-    grid-template-columns: repeat(2, minmax(110px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .otter-wrapper {
@@ -778,7 +780,8 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   }
 
   .action-btn {
-    padding: 12px;
+    padding: 10px;
+    min-height: 88px;
   }
 
   .tutorial-card {

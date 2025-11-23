@@ -36,3 +36,17 @@ test('starts mini-gioco quando si preme gioca', async ({ page }) => {
   await page.locator('#closeMini').click();
   await expect(overlay).toBeHidden();
 });
+
+test('mostra tutte le azioni nella griglia mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto(HOME_URL);
+  const startButton = page.getByRole('button', { name: TUTORIAL_BUTTON_LABEL });
+  if (await startButton.isVisible()) {
+    await startButton.click();
+  }
+
+  const actions = ['Nutri', 'Gioca', 'Lava', 'Dormi'];
+  for (const label of actions) {
+    await expect(page.getByRole('button', { name: label })).toBeVisible();
+  }
+});
