@@ -16,12 +16,46 @@ import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 
-const MOOD_IMAGES: Record<Mood, string> = {
-  neutral: 'src/assets/otter/otter_neutral.png',
-  happy: 'src/assets/otter/otter_happy.png',
-  sad: 'src/assets/otter/otter_sad.png',
-  sleepy: 'src/assets/otter/otter_sleep.png'
+type AccessoryState = {
+  hat: boolean;
+  scarf: boolean;
+  sunglasses: boolean;
 };
+
+type OutfitKey = 'base' | 'hat' | 'hatScarf' | 'hatScarfSunglasses';
+
+const OTTER_ASSET_BASE = 'src/assets/otter';
+
+const OUTFIT_VARIANTS: Array<{ key: OutfitKey; suffix: string; required: Array<keyof AccessoryState> }> = [
+  { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },
+  { key: 'hatScarf', suffix: '-hatScarf', required: ['hat', 'scarf'] },
+  { key: 'hat', suffix: '-hat', required: ['hat'] }
+];
+
+function resolveOutfit(accessories: AccessoryState): { key: OutfitKey; suffix: string } {
+  for (const variant of OUTFIT_VARIANTS) {
+    if (variant.required.every(name => accessories[name])) {
+      return { key: variant.key, suffix: variant.suffix };
+    }
+  }
+  return { key: 'base', suffix: '' };
+}
+
+function buildOtterImage(baseName: string, accessories: AccessoryState): { src: string; outfit: OutfitKey } {
+  const outfit = resolveOutfit(accessories);
+  return {
+    src: `${OTTER_ASSET_BASE}/${baseName}${outfit.suffix}.png`,
+    outfit: outfit.key
+  };
+}
+
+function pickAccessories(source: { hat: boolean; scarf: boolean; sunglasses: boolean }): AccessoryState {
+  return {
+    hat: source.hat,
+    scarf: source.scarf,
+    sunglasses: source.sunglasses
+  };
+}
 
 const CRITICAL_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', string> = {
   hunger: 'La lontra è affamatissima! Dagli da mangiare prima che diventi triste.',
@@ -33,6 +67,8 @@ const CRITICAL_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', string>
 type AlertVariant = 'info' | 'warning';
 
 let currentMood: Mood = 'neutral';
+let currentOutfit: OutfitKey = 'base';
+let hasRenderedOnce = false;
 let alertTimeoutId: number | null = null;
 let updateConfirm: (() => void) | null = null;
 let updateDismiss: (() => void) | null = null;
@@ -41,22 +77,26 @@ function $(id: string): HTMLElement | null {
   return document.getElementById(id);
 }
 
-function setExpression(mood: Mood): void {
-  if (currentMood === mood) {
-    return;
-  }
+function setExpression(mood: Mood, accessories: AccessoryState): void {
   const img = $('otterImage') as HTMLImageElement | null;
   if (!img) {
     return;
   }
 
-  img.src = MOOD_IMAGES[mood] ?? MOOD_IMAGES.neutral;
+  const { src, outfit } = buildOtterImage(`otter_${mood}`, accessories);
+  if (hasRenderedOnce && currentMood === mood && currentOutfit === outfit) {
+    return;
+  }
+
+  img.src = src;
 
   img.classList.remove('happy', 'sad', 'sleepy');
   if (mood !== 'neutral') {
     img.classList.add(mood);
   }
   currentMood = mood;
+  currentOutfit = outfit;
+  hasRenderedOnce = true;
 }
 
 function computeMood(): Mood {
@@ -86,35 +126,6 @@ function setBar(element: HTMLElement | null, value: number): void {
   if (clamped < 15) {
     element.classList.add('critical');
   }
-}
-
-function ensureAccessories(state: { hat: boolean; sunglasses: boolean; scarf: boolean }): void {
-  const container = $('accessories-container');
-  if (!container) {
-    return;
-  }
-
-  // Helper to handle accessory images
-  const handleAccessory = (id: string, src: string, show: boolean) => {
-    let img = document.getElementById(id) as HTMLImageElement | null;
-    if (show && !img) {
-      img = document.createElement('img');
-      img.id = id;
-      img.src = src;
-      img.classList.add('accessory');
-      container.appendChild(img);
-    } else if (!show && img) {
-      img.remove();
-    }
-  };
-
-  // We assume these assets exist or will exist. 
-  // For now, we can use placeholders or the same logic if user provides them.
-  // Since the user only mentioned otter PNGs, we might need to ask for accessory PNGs too.
-  // For now, I'll assume standard naming convention.
-  handleAccessory('acc-hat', 'src/assets/otter/hat.png', state.hat);
-  handleAccessory('acc-sunglasses', 'src/assets/otter/sunglasses.png', state.sunglasses);
-  handleAccessory('acc-scarf', 'src/assets/otter/scarf.png', state.scarf);
 }
 
 function updateStatsView(): void {
@@ -191,8 +202,7 @@ function render(): void {
   if (coinsLabel) {
     coinsLabel.textContent = String(state.coins);
   }
-  ensureAccessories(state);
-  setExpression(computeMood());
+  setExpression(computeMood(), pickAccessories(state));
   updateStatsView();
   evaluateCriticalWarnings();
   updateAnalyticsToggle(state.analyticsOptIn);
@@ -205,23 +215,21 @@ function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
   }
 
   // Optional: Switch to specific action images if available
-  const originalSrc = img.src;
+  const baseAccessories = pickAccessories(getState());
 
   if (animation === 'feed') {
-    img.src = 'src/assets/otter/otter_eat.png'; // Temporary switch
+    img.src = buildOtterImage('otter_eat', baseAccessories).src;
     img.classList.add('hop', 'eating');
     window.setTimeout(() => {
       img.classList.remove('hop', 'eating');
-      img.src = originalSrc; // Restore mood image
-      setExpression(currentMood); // Re-ensure correct mood image
+      setExpression(currentMood, pickAccessories(getState())); // Re-ensure correct mood image
     }, 1500);
   } else if (animation === 'bathe') {
-    img.src = 'src/assets/otter/otter_bath.png';
+    img.src = buildOtterImage('otter_bath', baseAccessories).src;
     img.classList.add('bathing');
     window.setTimeout(() => {
       img.classList.remove('bathing');
-      img.src = originalSrc;
-      setExpression(currentMood);
+      setExpression(currentMood, pickAccessories(getState()));
     }, 1600);
   } else if (animation === 'sleep') {
     // Sleep is usually a state, but here it's an action animation

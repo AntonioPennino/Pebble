@@ -1,5 +1,5 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v6';
+const CACHE_NAME = 'ottercare-v7';
 const urlsToCache = [
   './',
   './index.html',
@@ -20,9 +20,24 @@ const urlsToCache = [
   './src/assets/otter/otter_sleep.png',
   './src/assets/otter/otter_eat.png',
   './src/assets/otter/otter_bath.png',
-  './src/assets/otter/hat.png',
-  './src/assets/otter/sunglasses.png',
-  './src/assets/otter/scarf.png'
+  './src/assets/otter/otter_neutral-hat.png',
+  './src/assets/otter/otter_neutral-hatScarf.png',
+  './src/assets/otter/otter_neutral-hatScarfSunglasses.png',
+  './src/assets/otter/otter_happy-hat.png',
+  './src/assets/otter/otter_happy-hatScarf.png',
+  './src/assets/otter/otter_happy-hatScarfSunglasses.png',
+  './src/assets/otter/otter_sad-hat.png',
+  './src/assets/otter/otter_sad-hatScarf.png',
+  './src/assets/otter/otter_sad-hatScarfSunglasses.png',
+  './src/assets/otter/otter_sleep-hat.png',
+  './src/assets/otter/otter_sleep-hatScarf.png',
+  './src/assets/otter/otter_sleep-hatScarfSunglasses.png',
+  './src/assets/otter/otter_eat-hat.png',
+  './src/assets/otter/otter_eat-hatScarf.png',
+  './src/assets/otter/otter_eat-hatScarfSunglasses.png',
+  './src/assets/otter/otter_bath-hat.png',
+  './src/assets/otter/otter_bath-hatScarf.png',
+  './src/assets/otter/otter_bath-hatScarfSunglasses.png'
 ];
 
 // Installazione - cache delle risorse

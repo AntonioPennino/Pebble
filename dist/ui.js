@@ -3,12 +3,34 @@ import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } 
 import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
-const MOOD_IMAGES = {
-    neutral: 'src/assets/otter/otter_neutral.png',
-    happy: 'src/assets/otter/otter_happy.png',
-    sad: 'src/assets/otter/otter_sad.png',
-    sleepy: 'src/assets/otter/otter_sleep.png'
-};
+const OTTER_ASSET_BASE = 'src/assets/otter';
+const OUTFIT_VARIANTS = [
+    { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },
+    { key: 'hatScarf', suffix: '-hatScarf', required: ['hat', 'scarf'] },
+    { key: 'hat', suffix: '-hat', required: ['hat'] }
+];
+function resolveOutfit(accessories) {
+    for (const variant of OUTFIT_VARIANTS) {
+        if (variant.required.every(name => accessories[name])) {
+            return { key: variant.key, suffix: variant.suffix };
+        }
+    }
+    return { key: 'base', suffix: '' };
+}
+function buildOtterImage(baseName, accessories) {
+    const outfit = resolveOutfit(accessories);
+    return {
+        src: `${OTTER_ASSET_BASE}/${baseName}${outfit.suffix}.png`,
+        outfit: outfit.key
+    };
+}
+function pickAccessories(source) {
+    return {
+        hat: source.hat,
+        scarf: source.scarf,
+        sunglasses: source.sunglasses
+    };
+}
 const CRITICAL_MESSAGES = {
     hunger: 'La lontra è affamatissima! Dagli da mangiare prima che diventi triste.',
     happy: 'La lontra è triste, falle fare qualcosa di divertente o falle un bagnetto.',
@@ -16,26 +38,31 @@ const CRITICAL_MESSAGES = {
     energy: 'La lontra è esausta. Mettila a dormire per recuperare energia.'
 };
 let currentMood = 'neutral';
+let currentOutfit = 'base';
+let hasRenderedOnce = false;
 let alertTimeoutId = null;
 let updateConfirm = null;
 let updateDismiss = null;
 function $(id) {
     return document.getElementById(id);
 }
-function setExpression(mood) {
-    if (currentMood === mood) {
-        return;
-    }
+function setExpression(mood, accessories) {
     const img = $('otterImage');
     if (!img) {
         return;
     }
-    img.src = MOOD_IMAGES[mood] ?? MOOD_IMAGES.neutral;
+    const { src, outfit } = buildOtterImage(`otter_${mood}`, accessories);
+    if (hasRenderedOnce && currentMood === mood && currentOutfit === outfit) {
+        return;
+    }
+    img.src = src;
     img.classList.remove('happy', 'sad', 'sleepy');
     if (mood !== 'neutral') {
         img.classList.add(mood);
     }
     currentMood = mood;
+    currentOutfit = outfit;
+    hasRenderedOnce = true;
 }
 function computeMood() {
     const state = getState();
@@ -63,33 +90,6 @@ function setBar(element, value) {
     if (clamped < 15) {
         element.classList.add('critical');
     }
-}
-function ensureAccessories(state) {
-    const container = $('accessories-container');
-    if (!container) {
-        return;
-    }
-    // Helper to handle accessory images
-    const handleAccessory = (id, src, show) => {
-        let img = document.getElementById(id);
-        if (show && !img) {
-            img = document.createElement('img');
-            img.id = id;
-            img.src = src;
-            img.classList.add('accessory');
-            container.appendChild(img);
-        }
-        else if (!show && img) {
-            img.remove();
-        }
-    };
-    // We assume these assets exist or will exist. 
-    // For now, we can use placeholders or the same logic if user provides them.
-    // Since the user only mentioned otter PNGs, we might need to ask for accessory PNGs too.
-    // For now, I'll assume standard naming convention.
-    handleAccessory('acc-hat', 'src/assets/otter/hat.png', state.hat);
-    handleAccessory('acc-sunglasses', 'src/assets/otter/sunglasses.png', state.sunglasses);
-    handleAccessory('acc-scarf', 'src/assets/otter/scarf.png', state.scarf);
 }
 function updateStatsView() {
     const state = getState();
@@ -163,8 +163,7 @@ function render() {
     if (coinsLabel) {
         coinsLabel.textContent = String(state.coins);
     }
-    ensureAccessories(state);
-    setExpression(computeMood());
+    setExpression(computeMood(), pickAccessories(state));
     updateStatsView();
     evaluateCriticalWarnings();
     updateAnalyticsToggle(state.analyticsOptIn);
@@ -175,23 +174,21 @@ function triggerOtterAnimation(animation) {
         return;
     }
     // Optional: Switch to specific action images if available
-    const originalSrc = img.src;
+    const baseAccessories = pickAccessories(getState());
     if (animation === 'feed') {
-        img.src = 'src/assets/otter/otter_eat.png'; // Temporary switch
+        img.src = buildOtterImage('otter_eat', baseAccessories).src;
         img.classList.add('hop', 'eating');
         window.setTimeout(() => {
             img.classList.remove('hop', 'eating');
-            img.src = originalSrc; // Restore mood image
-            setExpression(currentMood); // Re-ensure correct mood image
+            setExpression(currentMood, pickAccessories(getState())); // Re-ensure correct mood image
         }, 1500);
     }
     else if (animation === 'bathe') {
-        img.src = 'src/assets/otter/otter_bath.png';
+        img.src = buildOtterImage('otter_bath', baseAccessories).src;
         img.classList.add('bathing');
         window.setTimeout(() => {
             img.classList.remove('bathing');
-            img.src = originalSrc;
-            setExpression(currentMood);
+            setExpression(currentMood, pickAccessories(getState()));
         }, 1600);
     }
     else if (animation === 'sleep') {
