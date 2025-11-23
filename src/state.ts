@@ -16,6 +16,8 @@ function createDefaultState(): GameState {
     clean: 80,
     energy: 80,
     coins: 0,
+    petName: 'OtterCare',
+    petNameConfirmed: false,
     hat: false,
     sunglasses: false,
     scarf: false,
@@ -47,6 +49,12 @@ function mergeState(partial: Partial<GameState> | null | undefined): GameState {
     ...defaults,
     ...partial,
     version: STATE_VERSION,
+    petName: typeof partial.petName === 'string' && partial.petName.trim().length
+      ? partial.petName.replace(/[<>]/g, '').trim().slice(0, 24)
+      : defaults.petName,
+    petNameConfirmed: typeof partial.petNameConfirmed === 'boolean'
+      ? partial.petNameConfirmed
+      : false,
     stats: {
       ...defaults.stats,
       ...(partial.stats ?? {})
@@ -189,6 +197,14 @@ export function setSunglassesOwned(value: boolean): void {
 export function setScarfOwned(value: boolean): void {
   updateState(draft => {
     draft.scarf = value;
+  });
+}
+
+export function setPetName(name: string): void {
+  const sanitized = name.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+  updateState(draft => {
+    draft.petName = sanitized.length ? sanitized : 'OtterCare';
+    draft.petNameConfirmed = true;
   });
 }
 

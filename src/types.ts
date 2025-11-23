@@ -25,6 +25,8 @@ export interface GameState {
   clean: number;
   energy: number;
   coins: number;
+  petName: string;
+  petNameConfirmed: boolean;
   hat: boolean;
   sunglasses: boolean;
   scarf: boolean;

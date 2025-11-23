@@ -5,6 +5,7 @@ import {
   resetCriticalMessage,
   resetState,
   setAnalyticsOptIn,
+  setPetName,
   setHatOwned,
   setSunglassesOwned,
   setScarfOwned,
@@ -72,9 +73,18 @@ let hasRenderedOnce = false;
 let alertTimeoutId: number | null = null;
 let updateConfirm: (() => void) | null = null;
 let updateDismiss: (() => void) | null = null;
+let hasFocusedNamePrompt = false;
 
 function $(id: string): HTMLElement | null {
   return document.getElementById(id);
+}
+
+function toggleOverlayVisibility(element: HTMLElement | null, show: boolean): void {
+  if (!element) {
+    return;
+  }
+  element.classList.toggle('hidden', !show);
+  element.setAttribute('aria-hidden', String(!show));
 }
 
 function setExpression(mood: Mood, accessories: AccessoryState): void {
@@ -188,11 +198,38 @@ function evaluateCriticalWarnings(): void {
 function render(): void {
   const state = getState();
   const tutorialOverlay = $('tutorialOverlay');
-  if (tutorialOverlay) {
-    const shouldShowTutorial = !state.tutorialSeen;
-    tutorialOverlay.classList.toggle('hidden', !shouldShowTutorial);
-    tutorialOverlay.setAttribute('aria-hidden', String(!shouldShowTutorial));
-    document.body.classList.toggle('overlay-active', shouldShowTutorial);
+  const nameOverlay = $('nameOverlay');
+  const shouldShowNamePrompt = !state.petNameConfirmed;
+  const shouldShowTutorial = !state.tutorialSeen && state.petNameConfirmed;
+
+  toggleOverlayVisibility(nameOverlay, shouldShowNamePrompt);
+  toggleOverlayVisibility(tutorialOverlay, shouldShowTutorial);
+  document.body.classList.toggle('overlay-active', shouldShowNamePrompt || shouldShowTutorial);
+
+  if (shouldShowNamePrompt) {
+    if (!hasFocusedNamePrompt) {
+      const nameInput = $('petNameInput') as HTMLInputElement | null;
+      if (nameInput) {
+        nameInput.value = state.petName ?? 'OtterCare';
+        window.setTimeout(() => nameInput.focus(), 0);
+      }
+      hasFocusedNamePrompt = true;
+    }
+  } else {
+    hasFocusedNamePrompt = false;
+  }
+
+  const nameLabel = $('petNameLabel');
+  if (nameLabel) {
+    nameLabel.textContent = state.petName || 'OtterCare';
+  }
+
+  const baseTitle = 'OtterCare — Gioco di cura della lontra';
+  const trimmedName = state.petName.trim();
+  if (state.petNameConfirmed && trimmedName && trimmedName !== 'OtterCare') {
+    document.title = `${trimmedName} — OtterCare`;
+  } else {
+    document.title = baseTitle;
   }
   setBar($('hungerBar'), state.hunger);
   setBar($('happyBar'), state.happy);
@@ -379,6 +416,21 @@ function initAnalyticsToggle(): void {
   });
 }
 
+function initNamePrompt(): void {
+  const form = $('nameForm') as HTMLFormElement | null;
+  const input = $('petNameInput') as HTMLInputElement | null;
+  if (!form || !input) {
+    return;
+  }
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const rawValue = input.value ?? '';
+    setPetName(rawValue);
+    recordEvent('nome:impostato');
+  });
+}
+
 function initTutorial(): void {
   const overlay = $('tutorialOverlay');
   const startBtn = $('tutorialStart');
@@ -390,22 +442,15 @@ function initTutorial(): void {
   const closeOverlay = () => {
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('overlay-active');
     window.setTimeout(() => {
       const target = $('feedBtn') as HTMLButtonElement | null;
       target?.focus();
     }, 0);
   };
 
-  const tutorialSeen = getState().tutorialSeen;
-  if (tutorialSeen) {
+  if (getState().tutorialSeen) {
     closeOverlay();
-    return;
   }
-
-  overlay.classList.remove('hidden');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('overlay-active');
 
   const handleStart = () => {
     setTutorialSeen();
@@ -454,6 +499,7 @@ export function initUI(): void {
   initNavigation();
   initBlink();
   initAnalyticsToggle();
+  initNamePrompt();
   initTutorial();
   initUpdateBanner();
 

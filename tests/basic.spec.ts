@@ -2,6 +2,17 @@ import { test, expect } from '@playwright/test';
 
 const HOME_URL = '/index.html';
 const TUTORIAL_BUTTON_LABEL = 'Inizia l\'avventura';
+const NAME_CONFIRM_LABEL = 'Conferma nome';
+
+async function completeNamePrompt(page, name = 'Luna'): Promise<void> {
+  const overlay = page.locator('#nameOverlay');
+  if (!(await overlay.isVisible())) {
+    return;
+  }
+  await page.fill('#petNameInput', name);
+  await page.getByRole('button', { name: NAME_CONFIRM_LABEL }).click();
+  await expect(overlay).toBeHidden();
+}
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -17,6 +28,7 @@ test.beforeEach(async ({ page }) => {
 
 test('shows tutorial on first access and allows dismissal', async ({ page }) => {
   await page.goto(HOME_URL);
+  await completeNamePrompt(page);
   const overlay = page.locator('#tutorialOverlay');
   await expect(overlay).toBeVisible();
   await page.getByRole('button', { name: TUTORIAL_BUTTON_LABEL }).click();
@@ -25,6 +37,7 @@ test('shows tutorial on first access and allows dismissal', async ({ page }) => 
 
 test('starts mini-gioco quando si preme gioca', async ({ page }) => {
   await page.goto(HOME_URL);
+  await completeNamePrompt(page);
   const startButton = page.getByRole('button', { name: TUTORIAL_BUTTON_LABEL });
   if (await startButton.isVisible()) {
     await startButton.click();
@@ -40,6 +53,7 @@ test('starts mini-gioco quando si preme gioca', async ({ page }) => {
 test('mostra tutte le azioni nella griglia mobile', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto(HOME_URL);
+  await completeNamePrompt(page);
   const startButton = page.getByRole('button', { name: TUTORIAL_BUTTON_LABEL });
   if (await startButton.isVisible()) {
     await startButton.click();

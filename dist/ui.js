@@ -1,4 +1,4 @@
-import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setHatOwned, setSunglassesOwned, setScarfOwned, setTutorialSeen, subscribe } from './state.js';
+import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setHatOwned, setSunglassesOwned, setScarfOwned, setTutorialSeen, setPetName, subscribe } from './state.js';
 import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
 import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
@@ -43,8 +43,16 @@ let hasRenderedOnce = false;
 let alertTimeoutId = null;
 let updateConfirm = null;
 let updateDismiss = null;
+let hasFocusedNamePrompt = false;
 function $(id) {
     return document.getElementById(id);
+}
+function toggleOverlayVisibility(element, show) {
+    if (!element) {
+        return;
+    }
+    element.classList.toggle('hidden', !show);
+    element.setAttribute('aria-hidden', String(!show));
 }
 function setExpression(mood, accessories) {
     const img = $('otterImage');
@@ -149,11 +157,36 @@ function evaluateCriticalWarnings() {
 function render() {
     const state = getState();
     const tutorialOverlay = $('tutorialOverlay');
-    if (tutorialOverlay) {
-        const shouldShowTutorial = !state.tutorialSeen;
-        tutorialOverlay.classList.toggle('hidden', !shouldShowTutorial);
-        tutorialOverlay.setAttribute('aria-hidden', String(!shouldShowTutorial));
-        document.body.classList.toggle('overlay-active', shouldShowTutorial);
+    const nameOverlay = $('nameOverlay');
+    const shouldShowNamePrompt = !state.petNameConfirmed;
+    const shouldShowTutorial = !state.tutorialSeen && state.petNameConfirmed;
+    toggleOverlayVisibility(nameOverlay, shouldShowNamePrompt);
+    toggleOverlayVisibility(tutorialOverlay, shouldShowTutorial);
+    document.body.classList.toggle('overlay-active', shouldShowNamePrompt || shouldShowTutorial);
+    if (shouldShowNamePrompt) {
+        if (!hasFocusedNamePrompt) {
+            const nameInput = $('petNameInput');
+            if (nameInput) {
+                nameInput.value = state.petName ?? 'OtterCare';
+                window.setTimeout(() => nameInput.focus(), 0);
+            }
+            hasFocusedNamePrompt = true;
+        }
+    }
+    else {
+        hasFocusedNamePrompt = false;
+    }
+    const nameLabel = $('petNameLabel');
+    if (nameLabel) {
+        nameLabel.textContent = state.petName || 'OtterCare';
+    }
+    const baseTitle = 'OtterCare — Gioco di cura della lontra';
+    const trimmedName = state.petName.trim();
+    if (state.petNameConfirmed && trimmedName && trimmedName !== 'OtterCare') {
+        document.title = `${trimmedName} — OtterCare`;
+    }
+    else {
+        document.title = baseTitle;
     }
     setBar($('hungerBar'), state.hunger);
     setBar($('happyBar'), state.happy);
@@ -324,6 +357,19 @@ function initAnalyticsToggle() {
         showAlert(message, 'info');
     });
 }
+function initNamePrompt() {
+    const form = $('nameForm');
+    const input = $('petNameInput');
+    if (!form || !input) {
+        return;
+    }
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+        const rawValue = (input.value ?? '');
+        setPetName(rawValue);
+        recordEvent('nome:impostato');
+    });
+}
 function initTutorial() {
     const overlay = $('tutorialOverlay');
     const startBtn = $('tutorialStart');
@@ -334,20 +380,14 @@ function initTutorial() {
     const closeOverlay = () => {
         overlay.classList.add('hidden');
         overlay.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('overlay-active');
         window.setTimeout(() => {
             const target = $('feedBtn');
             target?.focus();
         }, 0);
     };
-    const tutorialSeen = getState().tutorialSeen;
-    if (tutorialSeen) {
+    if (getState().tutorialSeen) {
         closeOverlay();
-        return;
     }
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('overlay-active');
     const handleStart = () => {
         setTutorialSeen();
         setAnalyticsOptIn(analyticsToggle.checked);
@@ -389,6 +429,7 @@ export function initUI() {
     initNavigation();
     initBlink();
     initAnalyticsToggle();
+    initNamePrompt();
     initTutorial();
     initUpdateBanner();
     const overlayEl = $('overlay');

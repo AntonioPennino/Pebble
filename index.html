@@ -25,9 +25,8 @@
   <header>
     <div class="header-content">
       <div class="header-left">
-        <div>
-          <h1>OtterCare</h1>
-          <p class="tagline">Prenditi cura della tua lontra virtuale</p>
+        <div aria-live="polite">
+          <h1 id="petNameLabel">OtterCare</h1>
         </div>
         <nav class="desktop-nav" aria-label="Navigazione principale">
           <button class="desktop-nav-item active" data-page="home" aria-pressed="true">Home</button>
@@ -41,6 +40,34 @@
       </div>
     </div>
   </header>
+  <div
+    id="nameOverlay"
+    class="overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
+    aria-labelledby="nameOverlayTitle"
+  >
+    <div class="name-card">
+      <h2 id="nameOverlayTitle">Scegli il nome della tua lontra</h2>
+      <p>Personalizza l'avventura dando un nome unico alla tua nuova amica.</p>
+      <form id="nameForm" class="name-form" autocomplete="off">
+        <label class="name-label" for="petNameInput">Nome lontra</label>
+        <input
+          id="petNameInput"
+          class="name-input"
+          name="petName"
+          type="text"
+          maxlength="24"
+          spellcheck="false"
+          placeholder="Es. Luna"
+          required
+        />
+        <button type="submit" class="primary-btn full-width">Conferma nome</button>
+      </form>
+    </div>
+  </div>
+
   <main>
     <section id="homePage" class="page-content active" aria-hidden="false" aria-label="Area principale">
       <div class="otter-container">

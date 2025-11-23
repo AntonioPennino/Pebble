@@ -10,6 +10,8 @@ function createDefaultState() {
         clean: 80,
         energy: 80,
         coins: 0,
+        petName: 'OtterCare',
+        petNameConfirmed: false,
         hat: false,
         sunglasses: false,
         scarf: false,
@@ -34,7 +36,7 @@ function mergeState(partial) {
     if (!partial) {
         return defaults;
     }
-    return {
+    const merged = {
         ...defaults,
         ...partial,
         version: STATE_VERSION,
@@ -55,6 +57,13 @@ function mergeState(partial) {
             ...(partial.criticalHintsShown ?? {})
         }
     };
+    merged.petName = typeof partial.petName === 'string' && partial.petName.trim().length
+        ? partial.petName.replace(/[<>]/g, '').trim().slice(0, 24)
+        : defaults.petName;
+    merged.petNameConfirmed = typeof partial.petNameConfirmed === 'boolean'
+        ? partial.petNameConfirmed
+        : false;
+    return merged;
 }
 export function getState() {
     return state;
@@ -162,6 +171,13 @@ export function setSunglassesOwned(value) {
 export function setScarfOwned(value) {
     updateState(draft => {
         draft.scarf = value;
+    });
+}
+export function setPetName(name) {
+    const sanitized = (name ?? '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    updateState(draft => {
+        draft.petName = sanitized.length ? sanitized : 'OtterCare';
+        draft.petNameConfirmed = true;
     });
 }
 export function setTutorialSeen() {
