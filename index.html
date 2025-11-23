@@ -14,7 +14,36 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="OtterCare 🦦 - Gioco di cura della lontra" />
   <meta name="twitter:description" content="Prenditi cura della tua lontra virtuale!" />
-  <link rel="manifest" href="./manifest.json">
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="header-left">
+        <div>
+          <h1>OtterCare</h1>
+          <p class="tagline">Prenditi cura della tua lontra virtuale</p>
+        </div>
+        <nav class="desktop-nav" aria-label="Navigazione principale">
+          <button class="desktop-nav-item active" data-page="home" aria-pressed="true">Home</button>
+          <button class="desktop-nav-item" data-page="shop" aria-pressed="false">Negozio</button>
+          <button class="desktop-nav-item" data-page="stats" aria-pressed="false">Statistiche</button>
+        </nav>
+      </div>
+      <div class="coins-display" aria-live="polite">
+        <span aria-hidden="true">🪙</span>
+        <span id="coins">0</span>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section id="homePage" class="page-content active" aria-hidden="false" aria-label="Area principale">
+      <div class="otter-container">
         <div class="otter-wrapper" aria-live="polite">
           <img
             id="otterImage"
