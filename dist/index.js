@@ -52,6 +52,21 @@ function promptForUpdate(worker) {
 function bootstrap() {
     loadState();
     void ensurePersistentStorage();
+    // Diagnostic: log resolved config values to help debug cloud sync setup
+    // Diagnostic: try to read runtime config with a dynamic import
+    void import('./config.js').then(cfg => {
+        try {
+            const supabaseUrl = typeof cfg.getSupabaseUrl === 'function' ? cfg.getSupabaseUrl() : '';
+            const anon = typeof cfg.getSupabaseAnonKey === 'function' ? cfg.getSupabaseAnonKey() : '';
+            const anonPreview = anon ? `${anon.slice(0, 6)}…${anon.slice(-6)}` : '(vuota)';
+            console.info('[OtterCare] runtime config:', { supabaseUrl: supabaseUrl || '(vuota)', supabaseAnonKey: anonPreview });
+        }
+        catch (err) {
+            console.info('[OtterCare] runtime config: unable to read config module', err);
+        }
+    }).catch(err => {
+        console.info('[OtterCare] runtime config: import error', err);
+    });
     initUI();
     setupServiceWorker();
     window.setInterval(() => advanceTick(), 5000);
