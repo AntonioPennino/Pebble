@@ -1,4 +1,4 @@
-import { advanceTick, loadState, saveState } from './state.js';
+import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
 import { initUI, prepareUpdatePrompt } from './ui.js';
 function setupServiceWorker() {
     if (!('serviceWorker' in navigator)) {
@@ -40,6 +40,7 @@ function promptForUpdate(worker) {
 }
 function bootstrap() {
     loadState();
+    void ensurePersistentStorage();
     initUI();
     setupServiceWorker();
     window.setInterval(() => advanceTick(), 5000);

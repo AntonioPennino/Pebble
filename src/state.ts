@@ -1,11 +1,13 @@
-import { GameState, GameStats } from './types';
+import { BackupPayload, GameState, GameStats } from './types';
 
 const STATE_KEY = 'otter_state_v2';
 const STATE_VERSION = 2;
+const BACKUP_SCHEMA_VERSION = 1;
 
 type Listener = (state: GameState) => void;
 
 const listeners: Listener[] = [];
+let persistentStorageGranted: boolean | null = null;
 
 function createDefaultState(): GameState {
   const now = Date.now();
@@ -76,6 +78,10 @@ function mergeState(partial: Partial<GameState> | null | undefined): GameState {
       ...(partial.criticalHintsShown ?? {})
     }
   };
+}
+
+function cloneState(source: GameState): GameState {
+  return JSON.parse(JSON.stringify(source)) as GameState;
 }
 
 export function getState(): GameState {
@@ -242,4 +248,88 @@ export function resetCriticalMessage(stat: 'hunger' | 'happy' | 'clean' | 'energ
       delete draft.criticalHintsShown[stat];
     }
   }, { silent: true });
+}
+
+export async function ensurePersistentStorage(): Promise<boolean> {
+  if (persistentStorageGranted === true) {
+    return true;
+  }
+
+  if (!('storage' in navigator)) {
+    persistentStorageGranted = false;
+    return false;
+  }
+
+  const manager = navigator.storage as StorageManager;
+  if (typeof manager.persist !== 'function') {
+    persistentStorageGranted = false;
+    return false;
+  }
+
+  try {
+    if (typeof manager.persisted === 'function') {
+      const alreadyPersisted = await manager.persisted();
+      if (alreadyPersisted) {
+        persistentStorageGranted = true;
+        return true;
+      }
+    }
+
+    const granted = await manager.persist();
+    persistentStorageGranted = granted;
+    return granted;
+  } catch (error) {
+    console.warn('Impossibile richiedere storage persistente', error);
+    persistentStorageGranted = false;
+    return false;
+  }
+}
+
+export function serializeBackup(): string {
+  const snapshot: BackupPayload = {
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    state: cloneState(state)
+  };
+  return JSON.stringify(snapshot, null, 2);
+}
+
+export function restoreBackupFromString(raw: string): { petName: string; coins: number; exportedAt?: string } {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    throw new Error('Il file selezionato non è un JSON valido.');
+  }
+
+  const resolveState = (): Partial<GameState> => {
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Formato di backup non riconosciuto.');
+    }
+
+    const candidate = parsed as Partial<BackupPayload> & Partial<GameState>;
+
+    if ('state' in candidate && candidate.state && typeof candidate.state === 'object') {
+      return candidate.state as Partial<GameState>;
+    }
+
+    if ('hunger' in candidate || 'coins' in candidate) {
+      return candidate as Partial<GameState>;
+    }
+
+    throw new Error('Il backup non contiene uno stato valido.');
+  };
+
+  const restoredState = mergeState(resolveState());
+  state = restoredState;
+  saveState();
+  notify();
+
+  const payload = parsed as Partial<BackupPayload>;
+  return {
+    petName: state.petName,
+    coins: state.coins,
+    exportedAt: typeof payload.exportedAt === 'string' ? payload.exportedAt : undefined
+  };
 }

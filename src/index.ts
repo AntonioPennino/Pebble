@@ -1,4 +1,4 @@
-import { advanceTick, loadState, saveState } from './state.js';
+import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
 import { initUI, prepareUpdatePrompt } from './ui.js';
 
 function setupServiceWorker(): void {
@@ -47,6 +47,7 @@ function promptForUpdate(worker: ServiceWorker): void {
 
 function bootstrap(): void {
   loadState();
+  void ensurePersistentStorage();
   initUI();
   setupServiceWorker();
 

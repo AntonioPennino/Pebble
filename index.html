@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OtterCare — Gioco di cura della lontra</title>
   <meta name="description" content="Prenditi cura della tua adorabile lontra virtuale! Un gioco web rilassante ispirato a Pou ma più tenero. Nutrila, gioca, puliscila e guardala crescere felice." />
   <meta name="keywords" content="lontra, gioco, pet virtuale, tamagotchi, pou, animali, cute, kawaii" />
@@ -196,6 +196,15 @@
           <span class="toggle-switch"></span>
         </label>
         <p id="analyticsSummary" class="small-text">Statistiche disattivate.</p>
+        <div class="backup-section">
+          <h4>Backup salvataggi</h4>
+          <p class="small-text">Esporta un file di sicurezza o ripristina i tuoi progressi su un nuovo dispositivo.</p>
+          <div class="backup-actions">
+            <button id="backupExportBtn" class="secondary-btn">Scarica backup</button>
+            <button id="backupImportBtn" class="secondary-btn">Ripristina backup</button>
+          </div>
+          <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
+        </div>
         <button id="resetBtn" class="danger-btn">Reset Gioco</button>
       </div>
     </section>

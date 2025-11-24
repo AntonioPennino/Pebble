@@ -39,6 +39,12 @@ export interface GameState {
   criticalHintsShown: CriticalHintsShown;
 }
 
+export interface BackupPayload {
+  schemaVersion: number;
+  exportedAt: string;
+  state: GameState;
+}
+
 export interface TutorialStep {
   id: string;
   title: string;

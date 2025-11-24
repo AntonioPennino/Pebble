@@ -11,7 +11,9 @@ import {
   setSunglassesOwned,
   setScarfOwned,
   setTutorialSeen,
-  subscribe
+  subscribe,
+  serializeBackup,
+  restoreBackupFromString
 } from './state.js';
 import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
 import { playSound, resumeAudioContext } from './audio.js';
@@ -468,6 +470,62 @@ function initAnalyticsToggle(): void {
   });
 }
 
+function initBackupControls(): void {
+  const exportBtn = $('backupExportBtn') as HTMLButtonElement | null;
+  const importBtn = $('backupImportBtn') as HTMLButtonElement | null;
+  const fileInput = $('backupFileInput') as HTMLInputElement | null;
+
+  exportBtn?.addEventListener('click', () => {
+    try {
+      const backupJson = serializeBackup();
+      const petName = getState().petName.trim() || 'OtterCare';
+      const normalized = petName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'ottercare';
+      const timestamp = new Date().toISOString().replace(/[:]/g, '-');
+      const blob = new Blob([backupJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `ottercare-backup-${normalized}-${timestamp}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      showAlert('Backup scaricato! Conserva il file per sicurezza.', 'info');
+      recordEvent('backup:export');
+    } catch (error) {
+      console.error('Impossibile generare il backup', error);
+      showAlert('Non sono riuscito a creare il backup, riprova.', 'warning');
+    }
+  });
+
+  if (importBtn && fileInput) {
+    importBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const summary = restoreBackupFromString(text);
+        const name = summary.petName || 'OtterCare';
+        showAlert(`Backup ripristinato! Bentornato ${name}.`, 'info');
+        recordEvent('backup:import');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Backup non valido.';
+        showAlert(message, 'warning');
+        console.error('Errore nel ripristino del backup', error);
+      } finally {
+        fileInput.value = '';
+      }
+    });
+  }
+}
+
 function initInstallPrompt(): void {
   const installButton = $('installConfirm') as HTMLButtonElement | null;
   const dismissButton = $('installDismiss') as HTMLButtonElement | null;
@@ -599,6 +657,7 @@ export function initUI(): void {
   initNavigation();
   initBlink();
   initAnalyticsToggle();
+  initBackupControls();
   initInstallPrompt();
   initNamePrompt();
   initTutorial();
