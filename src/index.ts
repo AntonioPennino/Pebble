@@ -17,6 +17,10 @@ function setupServiceWorker(): void {
   });
 
   navigator.serviceWorker.register('/OtterCare/sw.js').then(registration => {
+    registration.update().catch(() => {
+      // ignora errori di rete temporanei
+    });
+
     if (registration.waiting) {
       promptForUpdate(registration.waiting);
     }
@@ -31,6 +35,16 @@ function setupServiceWorker(): void {
           promptForUpdate(installer);
         }
       });
+    });
+
+    window.setInterval(() => {
+      registration.update().catch(() => undefined);
+    }, 60 * 60 * 1000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        registration.update().catch(() => undefined);
+      }
     });
   }).catch(error => {
     console.warn('Impossibile registrare il Service Worker', error);

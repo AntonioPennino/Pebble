@@ -1,11 +1,12 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v8';
+const CACHE_NAME = 'ottercare-v9';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './manifest.json',
   './icon.svg',
+  './config.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
@@ -70,17 +71,60 @@ self.addEventListener('activate', event => {
 
 // Fetch - serve da cache, fallback a network
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-      )
-  );
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Network-first per documenti e asset critici (html/js/css/config)
+  const isDocument = request.mode === 'navigate';
+  const isCriticalAsset = ['.html', '.js', '.css'].some(ext => url.pathname.endsWith(ext)) || url.pathname.endsWith('config.js');
+  const isServiceWorker = url.pathname.endsWith('sw.js');
+
+  if (isServiceWorker) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (isDocument || isCriticalAsset) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  event.respondWith(cacheFirst(request));
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    throw error;
+  }
+}
+
+async function cacheFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  if (cached) {
+    return cached;
+  }
+  const response = await fetch(request);
+  if (response && response.status === 200) {
+    cache.put(request, response.clone());
+  }
+  return response;
+}
 
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
