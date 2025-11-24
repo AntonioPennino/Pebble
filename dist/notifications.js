@@ -1,4 +1,4 @@
-import { REMINDER_FUNCTION_NAME, VAPID_PUBLIC_KEY, isCloudSyncConfigured, isPushConfigured } from './config.js';
+import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPushConfigured } from './config.js';
 import { getSupabaseClient } from './cloudSync.js';
 import { getState, markNotificationPrompted, markNotificationSent, updateNotificationSettings } from './state.js';
 import { recordEvent } from './analytics.js';
@@ -111,9 +111,10 @@ async function ensurePushSubscription() {
     }
     const registration = await navigator.serviceWorker.ready;
     let subscription = await registration.pushManager.getSubscription();
-    if (!subscription && isPushConfigured() && VAPID_PUBLIC_KEY) {
+    const vapidKey = getVapidPublicKey();
+    if (!subscription && isPushConfigured() && vapidKey) {
         try {
-            const serverKey = base64ToUint8Array(VAPID_PUBLIC_KEY);
+            const serverKey = base64ToUint8Array(vapidKey);
             subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: serverKey
@@ -186,7 +187,8 @@ async function removeSubscriptionFromSupabase(subscription) {
     }
 }
 async function triggerRemoteReminder(stat) {
-    if (!REMINDER_FUNCTION_NAME || !isCloudSyncConfigured()) {
+    const reminderFunction = getReminderFunctionName();
+    if (!reminderFunction || !isCloudSyncConfigured()) {
         return;
     }
     const supabase = getSupabaseClient();
@@ -195,7 +197,7 @@ async function triggerRemoteReminder(stat) {
     }
     const state = getState();
     try {
-        await supabase.functions.invoke(REMINDER_FUNCTION_NAME, {
+        await supabase.functions.invoke(reminderFunction, {
             body: {
                 stat,
                 petName: state.petName,

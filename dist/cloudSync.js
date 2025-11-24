@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_ANON_KEY, SUPABASE_URL, isCloudSyncConfigured } from './config.js';
+import { getSupabaseAnonKey, getSupabaseUrl, isCloudSyncConfigured } from './config.js';
 let client = null;
 function getClient() {
     if (!isCloudSyncConfigured()) {
         return null;
     }
     if (!client) {
-        client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        client = createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
             auth: { persistSession: false },
             global: {
                 headers: {

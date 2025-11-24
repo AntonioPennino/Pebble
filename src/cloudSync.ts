@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { SUPABASE_ANON_KEY, SUPABASE_URL, isCloudSyncConfigured } from './config.js';
+import { getSupabaseAnonKey, getSupabaseUrl, isCloudSyncConfigured } from './config.js';
 import { GameState } from './types.js';
 
 export interface RemoteState {
@@ -14,7 +14,7 @@ function getClient(): SupabaseClient | null {
     return null;
   }
   if (!client) {
-    client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    client = createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
       auth: { persistSession: false },
       global: {
         headers: {
