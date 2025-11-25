@@ -54,6 +54,41 @@ body {
   color-scheme: light;
 }
 
+body.theme-comfort {
+  color-scheme: dark;
+  --bg-gradient-start: #0A1B20;
+  --bg-gradient-end: #122A2F;
+  --primary: #F2E3C6;
+  --primary-dark: #FFE9D6;
+  --accent: #6ABFAB;
+  --accent-light: #87D3C3;
+  --accent-salmon: #FF9B85;
+  --status-mud: #5C5248;
+  --text-main: #F2E3C6;
+  --text-muted: rgba(242, 227, 198, 0.7);
+  --card-bg: rgba(14, 32, 36, 0.92);
+  --card-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  --header-bg: rgba(11, 26, 30, 0.9);
+  --header-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  --bottom-nav-bg: rgba(11, 26, 30, 0.92);
+  --bottom-nav-shadow: 0 -10px 28px rgba(0, 0, 0, 0.55);
+  --divider: rgba(242, 227, 198, 0.14);
+  --modal-bg: rgba(12, 27, 31, 0.96);
+  --modal-shadow: 0 22px 48px rgba(0, 0, 0, 0.65);
+  --secondary-btn-bg: rgba(242, 227, 198, 0.08);
+  --secondary-btn-color: #F2E3C6;
+  --secondary-btn-border: rgba(242, 227, 198, 0.22);
+  --secondary-btn-active-bg: var(--accent);
+  --secondary-btn-active-color: #021211;
+  --surface-glass: rgba(11, 26, 30, 0.85);
+  --surface-glass-strong: rgba(11, 26, 30, 0.92);
+  --input-border: rgba(242, 227, 198, 0.3);
+  --color-hunger: var(--accent-salmon);
+  --color-happy: #FFCE86;
+  --color-clean: var(--accent);
+  --color-energy: #A6BD74;
+}
+
 /* Typography */
 h1, h2, h3 {
   margin: 0;
@@ -746,6 +781,11 @@ body.theme-comfort .secondary-btn:hover {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
 
+body.theme-comfort .coins-display {
+  background: rgba(255, 155, 133, 0.28);
+  color: #FFE0D8;
+}
+
 body.theme-comfort .secondary-btn.danger {
   color: var(--accent-salmon);
   border-color: rgba(255, 155, 133, 0.4);
@@ -805,39 +845,7 @@ body.theme-comfort .install-toast {
 
 body.theme-comfort .overlay,
 body.theme-comfort .tutorial-overlay {
-  --bg-gradient-start: #071419;
-  --bg-gradient-end: #0F252A;
-  --primary: #F2E3C6;
-  --primary-dark: #F9F2E5;
-  --accent: #6ABFAB;
-  --accent-light: #50A392;
-  --text-main: #F2E3C6;
-  --text-muted: rgba(242, 227, 198, 0.7);
-  --card-bg: rgba(13, 27, 30, 0.9);
-  --card-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-  --header-bg: rgba(10, 22, 25, 0.9);
-  --header-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
-  --bottom-nav-bg: rgba(10, 22, 25, 0.92);
-  --bottom-nav-shadow: 0 -10px 28px rgba(0, 0, 0, 0.55);
-  --divider: rgba(242, 227, 198, 0.12);
-  --modal-bg: rgba(12, 24, 28, 0.96);
-  --modal-shadow: 0 22px 48px rgba(0, 0, 0, 0.65);
-  --secondary-btn-bg: rgba(242, 227, 198, 0.08);
-  --secondary-btn-color: #F2E3C6;
-  --secondary-btn-border: rgba(242, 227, 198, 0.25);
-  --secondary-btn-active-bg: var(--accent);
-  --secondary-btn-active-color: #021211;
-  --surface-glass: rgba(7, 20, 25, 0.85);
-  --surface-glass-strong: rgba(7, 20, 25, 0.92);
-  --input-border: rgba(242, 227, 198, 0.35);
-  max-width: 360px;
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: var(--modal-shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: center;
+  background: rgba(5, 14, 18, 0.72);
 }
 
 .name-card h2 {
