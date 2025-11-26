@@ -3,8 +3,8 @@
 ## [Unreleased]
 
 ### 🎨 Interfaccia
-- Sostituite le icone delle azioni e della navigazione con un nuovo set vettoriale coordinato con la palette Pebble.
-- Aggiornato il service worker per includere le nuove risorse SVG nella cache offline.
+- Integrati gli asset PNG originali del menu (azioni principali + tab home/shop) direttamente nell'interfaccia.
+- Aggiornato il service worker per precaricare i PNG e le rispettive versioni retina in modalità offline.
 
 ## [v2.0] - 18 novembre 2025
 

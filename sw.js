@@ -1,5 +1,5 @@
 // Service Worker per PWA Pebble
-const CACHE_NAME = 'pebble-v2';
+const CACHE_NAME = 'pebble-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -42,13 +42,24 @@ const urlsToCache = [
   './src/assets/otter/otter_bath-hat.png',
   './src/assets/otter/otter_bath-hatScarf.png',
   './src/assets/otter/otter_bath-hatScarfSunglasses.png',
-  './src/assets/menu-icons/icon-food.svg',
-  './src/assets/menu-icons/icon-games.svg',
-  './src/assets/menu-icons/icon-health.svg',
-  './src/assets/menu-icons/icon-home.svg',
-  './src/assets/menu-icons/icon-hygiene.svg',
-  './src/assets/menu-icons/icon-shop.svg',
-  './src/assets/menu-icons/icon-stats.svg'
+  './src/assets/menu-icons/icon-food.png',
+  './src/assets/menu-icons/icon-food@2x.png',
+  './src/assets/menu-icons/icon-food@3x.png',
+  './src/assets/menu-icons/icon-games.png',
+  './src/assets/menu-icons/icon-games@2x.png',
+  './src/assets/menu-icons/icon-games@3x.png',
+  './src/assets/menu-icons/icon-health.png',
+  './src/assets/menu-icons/icon-health@2x.png',
+  './src/assets/menu-icons/icon-health@3x.png',
+  './src/assets/menu-icons/icon-home.png',
+  './src/assets/menu-icons/icon-home@2x.png',
+  './src/assets/menu-icons/icon-home@3x.png',
+  './src/assets/menu-icons/icon-hygiene.png',
+  './src/assets/menu-icons/icon-hygiene@2x.png',
+  './src/assets/menu-icons/icon-hygiene@3x.png',
+  './src/assets/menu-icons/icon-shop.png',
+  './src/assets/menu-icons/icon-shop@2x.png',
+  './src/assets/menu-icons/icon-shop@3x.png'
 ];
 
 // Installazione - cache delle risorse
