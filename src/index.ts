@@ -1,5 +1,6 @@
 import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
-import { initUI, prepareUpdatePrompt } from './ui.js';
+import { initUI, prepareUpdatePrompt, showGiftModal } from './ui.js';
+import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState, type PebbleGiftEventDetail } from './gameStateManager.js';
 
 function setupServiceWorker(): void {
   if (!('serviceWorker' in navigator)) {
@@ -62,6 +63,24 @@ function promptForUpdate(worker: ServiceWorker): void {
 function bootstrap(): void {
   loadState();
   void ensurePersistentStorage();
+  const gameState = getGameStateInstance();
+
+  window.addEventListener('pebble-gift-found', event => {
+    const customEvent = event as CustomEvent<PebbleGiftEventDetail>;
+    const item = customEvent.detail?.item ?? 'dono misterioso';
+    showGiftModal(item);
+  });
+
+  const offlineProgress = calculateCoreOfflineProgress();
+  if (offlineProgress) {
+    const hoursText = offlineProgress.hoursAway.toFixed(2);
+    console.info(`[Pebble] Sei stato via per ${hoursText} ore.`);
+    if (offlineProgress.gift) {
+      showGiftModal(offlineProgress.gift);
+    }
+  }
+
+  void syncCoreState();
   // Diagnostic: log resolved config values to help debug cloud sync setup
   // Diagnostic: try to read runtime config with a dynamic import
   void import('./config.js').then(cfg => {
@@ -79,7 +98,10 @@ function bootstrap(): void {
   initUI();
   setupServiceWorker();
 
-  window.setInterval(() => advanceTick(), 5000);
+  window.setInterval(() => {
+    advanceTick();
+    syncManagerWithLegacyCoreStats();
+  }, 5000);
   window.setInterval(() => saveState(), 60000);
   window.addEventListener('beforeunload', () => saveState());
 }

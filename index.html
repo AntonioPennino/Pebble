@@ -236,6 +236,11 @@
           <span id="statItems" class="stat-value">0</span>
         </div>
       </div>
+      <div class="inventory-card">
+        <h3>Collezione</h3>
+        <p id="inventoryEmpty" class="small-text">Ancora nessun ricordo trovato. Torna più tardi per scoprire nuove sorprese!</p>
+        <ul id="inventoryList" class="inventory-list hidden" aria-live="polite"></ul>
+      </div>
       <div class="settings-card">
         <h3>Impostazioni</h3>
         <label class="toggle-row">
@@ -333,6 +338,24 @@
         <span class="toggle-switch"></span>
       </label>
       <button id="tutorialStart" class="primary-btn full-width">Inizia l'avventura</button>
+    </div>
+  </div>
+
+  <div
+    id="giftOverlay"
+    class="overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
+    aria-labelledby="giftTitle"
+  >
+    <div class="gift-card">
+      <div class="gift-icon" aria-hidden="true">🎁</div>
+      <h2 id="giftTitle">La tua lontra ha un dono!</h2>
+      <p id="giftMessage" class="gift-message">Ha trovato qualcosa di speciale lungo la riva.</p>
+      <div class="gift-actions">
+        <button id="giftCloseBtn" class="primary-btn full-width" type="button">Che dolce!</button>
+      </div>
     </div>
   </div>
 

@@ -1,5 +1,6 @@
 import { recordEvent } from './analytics.js';
 import { incrementStat, modifyCoins, updateState } from './state.js';
+import { syncManagerWithLegacyCoreStats } from './gameStateManager.js';
 
 export function feedAction(): void {
   updateState(draft => {
@@ -7,6 +8,7 @@ export function feedAction(): void {
     draft.happy = Math.min(100, draft.happy + 6);
     draft.coins = Math.max(0, draft.coins - 5);
   });
+  syncManagerWithLegacyCoreStats();
   recordEvent('azione:cibo');
 }
 
@@ -15,6 +17,7 @@ export function batheAction(): void {
     draft.clean = Math.min(100, draft.clean + 25);
     draft.happy = Math.min(100, draft.happy + 4);
   });
+  syncManagerWithLegacyCoreStats();
   recordEvent('azione:bagno');
 }
 
@@ -23,6 +26,7 @@ export function sleepAction(): void {
     draft.energy = Math.min(100, draft.energy + 40);
     draft.happy = Math.min(100, draft.happy + 3);
   });
+  syncManagerWithLegacyCoreStats();
   recordEvent('azione:sonno');
 }
 
@@ -52,6 +56,7 @@ export function rewardFishCatch(): void {
   updateState(draft => {
     draft.happy = Math.min(100, draft.happy + 4);
   });
+  syncManagerWithLegacyCoreStats();
   incrementStat('fishCaught');
   recordEvent('minigioco:pesce');
 }
