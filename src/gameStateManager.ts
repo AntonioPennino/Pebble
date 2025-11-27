@@ -61,6 +61,8 @@ export interface OfflineProgressResult {
 
 export class GameState {
   private static instance: GameState | null = null;
+  private static supabaseUnavailable = false;
+  private static supabaseWarningLogged = false;
 
   private stats: CoreStats;
   private lastLoginDate: number;
@@ -85,6 +87,10 @@ export class GameState {
 
   public getStats(): CoreStats {
     return this.cloneStats(this.stats);
+  }
+
+  public getPlayerId(): string {
+    return this.playerId;
   }
 
   public getInventory(): string[] {
@@ -151,6 +157,9 @@ export class GameState {
     if (!supabase) {
       return;
     }
+    if (GameState.supabaseUnavailable) {
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -159,8 +168,14 @@ export class GameState {
         .eq('id', this.playerId)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        if (error.code === 'PGRST205') {
+          GameState.markSupabaseUnavailable();
+          return;
+        }
+        if (error.code !== 'PGRST116') {
         throw error;
+        }
       }
 
       const remote = (data ?? null) as SupabaseGameStateRow | null;
@@ -181,13 +196,33 @@ export class GameState {
         .upsert(payload, { onConflict: 'id' });
 
       if (upsertError) {
+        if (upsertError.code === 'PGRST205') {
+          GameState.markSupabaseUnavailable();
+          return;
+        }
         throw upsertError;
       }
 
       this.writeToStorage();
       this.syncStatsToLegacyState();
     } catch (error) {
+      if (GameState.isMissingTableError(error)) {
+        GameState.markSupabaseUnavailable();
+        return;
+      }
       console.warn('Impossibile sincronizzare il GameState con Supabase', error);
+    }
+  }
+
+  private static isMissingTableError(error: unknown): error is { code: string } {
+    return Boolean(error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'PGRST205');
+  }
+
+  private static markSupabaseUnavailable(): void {
+    GameState.supabaseUnavailable = true;
+    if (!GameState.supabaseWarningLogged) {
+      GameState.supabaseWarningLogged = true;
+      console.info('[Pebble] Supabase non configurato per pebble_game_state; sincronizzazione core stats disattivata. Consulta README per lo schema oppure ignora se usi solo il backup cloud.');
     }
   }
 

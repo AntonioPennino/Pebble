@@ -19,13 +19,6 @@ export interface CriticalHintsShown {
   energy?: boolean;
 }
 
-export interface CloudSyncInfo {
-  enabled: boolean;
-  recordId: string | null;
-  lastSyncedAt: string | null;
-  lastRemoteUpdate: string | null;
-}
-
 export interface NotificationSettings {
   enabled: boolean;
   permission: NotificationPermission;
@@ -55,7 +48,6 @@ export interface GameState {
   stats: GameStats;
   analytics: AnalyticsData;
   criticalHintsShown: CriticalHintsShown;
-  cloudSync: CloudSyncInfo;
   notifications: NotificationSettings;
 }
 

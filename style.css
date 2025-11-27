@@ -817,8 +817,7 @@ main.no-scroll {
 
 .theme-section,
 .notification-section,
-.backup-section,
-.cloud-sync-section {
+.backup-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -827,9 +826,7 @@ main.no-scroll {
 
 .theme-actions,
 .notification-actions,
-.backup-actions,
-.cloud-sync-actions,
-.cloud-sync-input {
+.backup-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -851,16 +848,14 @@ main.no-scroll {
 
 .theme-section h4,
 .notification-section h4,
-.backup-section h4,
-.cloud-sync-section h4 {
+.backup-section h4 {
   margin: 0;
   color: var(--primary-dark);
 }
 
 .theme-section .small-text,
 .notification-section .small-text,
-.backup-section .small-text,
-.cloud-sync-section .small-text {
+.backup-section .small-text {
   margin: 0;
 }
 
@@ -868,50 +863,6 @@ main.no-scroll {
   font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0;
-}
-
-.cloud-sync-import {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.cloud-sync-input input {
-  flex: 1 1 160px;
-  border: 1px solid var(--input-border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  background: var(--card-bg);
-  color: var(--text-main);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.3s ease, color 0.3s ease;
-}
-
-.cloud-sync-input input::placeholder {
-  color: var(--text-muted);
-}
-
-.cloud-sync-input input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(106, 191, 171, 0.35);
-  outline: none;
-}
-
-.cloud-code-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.cloud-code {
-  background: rgba(106, 191, 171, 0.18);
-  color: var(--primary-dark);
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  font-size: 0.95rem;
 }
 
 .warning-text {
@@ -1840,24 +1791,6 @@ body.theme-comfort .tutorial-overlay {
   }
   
   .backup-actions .secondary-btn {
-    width: 100%;
-  }
-
-  .cloud-sync-actions {
-    flex-direction: column;
-  }
-
-  .cloud-sync-actions .primary-btn,
-  .cloud-sync-actions .secondary-btn {
-    width: 100%;
-  }
-
-  .cloud-sync-input {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .cloud-sync-input button {
     width: 100%;
   }
 
