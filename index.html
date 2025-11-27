@@ -42,9 +42,17 @@
   <header>
     <div class="header-content">
       <div class="header-left">
-        <div aria-live="polite">
-          <h1 id="petNameLabel">Pebble</h1>
-        </div>
+        <button
+          id="settingsBtn"
+          class="icon-btn settings-btn"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="settingsOverlay"
+          aria-label="Apri impostazioni"
+        >⚙️</button>
+      </div>
+      <div class="header-center" aria-live="polite">
+        <h1 id="petNameLabel">Pebble</h1>
         <nav class="desktop-nav" aria-label="Navigazione principale">
           <button class="desktop-nav-item active" data-page="den" aria-pressed="true">Tana</button>
           <button class="desktop-nav-item" data-page="kitchen" aria-pressed="false">Cucina</button>
@@ -54,14 +62,6 @@
         </nav>
       </div>
       <div class="header-right">
-        <button
-          id="settingsBtn"
-          class="icon-btn settings-btn"
-          type="button"
-          aria-haspopup="dialog"
-          aria-controls="settingsOverlay"
-          aria-label="Apri impostazioni"
-        >⚙️</button>
         <div class="coins-display" aria-live="polite">
           <span aria-hidden="true">🪙</span>
           <span id="coins">0</span>

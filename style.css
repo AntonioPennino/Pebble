@@ -36,7 +36,7 @@
   --btn-radius: 20px;
   --bottom-nav-height: 84px;
   --safe-area-bottom: env(safe-area-inset-bottom, 20px);
-  --header-offset: calc(88px + env(safe-area-inset-top, 0px));
+  --header-offset: calc(64px + env(safe-area-inset-top, 0px));
   
   /* Interactive */
   --secondary-btn-bg: #FFF5E6;
@@ -164,8 +164,8 @@ header {
 }
 
 .header-content {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   max-width: 1000px;
   width: 100%;
@@ -176,12 +176,27 @@ header {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: flex-start;
+}
+
+.header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  min-width: 0;
+}
+
+.header-center .desktop-nav {
+  margin-top: 4px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 14px;
 }
 
@@ -238,7 +253,7 @@ main {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-top: var(--header-offset);
+  padding-top: 24px;
   padding-bottom: calc(var(--bottom-nav-height) + 28px + var(--safe-area-bottom));
   scroll-behavior: smooth;
   scroll-padding-top: var(--header-offset);
@@ -1618,7 +1633,7 @@ body.theme-comfort .tutorial-overlay {
     flex-direction: row;
     gap: 32px;
     padding: 32px;
-    padding-top: max(64px, var(--header-offset));
+    padding-top: 40px;
     padding-bottom: 48px;
     max-width: 1200px;
     margin: 0 auto;
@@ -1680,6 +1695,14 @@ body.theme-comfort .tutorial-overlay {
     padding: 10px 16px;
   }
 
+  .header-content {
+    gap: 8px;
+  }
+
+  .header-center {
+    gap: 4px;
+  }
+
   .status-container {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 12px;
@@ -1707,11 +1730,6 @@ body.theme-comfort .tutorial-overlay {
   .otter-wrapper {
     width: min(78vw, 240px);
     aspect-ratio: 4 / 3;
-  }
-
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   header h1 {
@@ -1742,17 +1760,6 @@ body.theme-comfort .tutorial-overlay {
     font-size: 0.65rem;
   }
   
-  .header-left {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .coins-display {
-    position: absolute;
-    top: 16px;
-    right: 24px;
-  }
-
   .backup-actions {
     flex-direction: column;
   }
