@@ -41,9 +41,11 @@
           <h1 id="petNameLabel">Pebble</h1>
         </div>
         <nav class="desktop-nav" aria-label="Navigazione principale">
-          <button class="desktop-nav-item active" data-page="home" aria-pressed="true">Home</button>
-          <button class="desktop-nav-item" data-page="shop" aria-pressed="false">Negozio</button>
-          <button class="desktop-nav-item" data-page="stats" aria-pressed="false">Statistiche</button>
+          <button class="desktop-nav-item active" data-page="den" aria-pressed="true">Tana</button>
+          <button class="desktop-nav-item" data-page="kitchen" aria-pressed="false">Cucina</button>
+          <button class="desktop-nav-item" data-page="hygiene" aria-pressed="false">Fiume</button>
+          <button class="desktop-nav-item" data-page="games" aria-pressed="false">Giochi</button>
+          <button class="desktop-nav-item" data-page="shop" aria-pressed="false">Mercante</button>
         </nav>
       </div>
       <div class="coins-display" aria-live="polite">
@@ -81,229 +83,242 @@
   </div>
 
   <main>
-    <section id="homePage" class="page-content active" aria-hidden="false" aria-label="Area principale">
-      <div class="otter-container">
-        <div class="otter-wrapper" aria-live="polite">
+    <section id="denPage" class="scene den-scene active" aria-hidden="false" aria-label="La tana della lontra">
+      <div class="scene-frame">
+        <div class="den-atmosphere" aria-hidden="true">
+          <div class="den-window">
+            <span id="denWindowLabel">Riparo serale</span>
+          </div>
+        </div>
+        <div class="den-otter" aria-live="polite">
           <img
             id="otterImage"
             class="otter-img"
             src="src/assets/otter/otter_neutral.png"
-            alt="La tua lontra"
+            alt="Pebble riposa nella tana"
           />
           <div id="accessories-container" aria-hidden="true"></div>
         </div>
-      </div>
-
-      <div class="status-container" role="list">
-        <div class="status-item" role="listitem">
-          <div class="status-icon" aria-hidden="true">🍗</div>
-          <div class="progress-bar" aria-label="Fame">
-            <div id="hungerBar" class="progress-fill"></div>
-          </div>
-        </div>
-        <div class="status-item" role="listitem">
-          <div class="status-icon" aria-hidden="true">🎉</div>
-          <div class="progress-bar" aria-label="Felicità">
-            <div id="happyBar" class="progress-fill"></div>
-          </div>
-        </div>
-        <div class="status-item" role="listitem">
-          <div class="status-icon" aria-hidden="true">🧼</div>
-          <div class="progress-bar" aria-label="Pulizia">
-            <div id="cleanBar" class="progress-fill"></div>
-          </div>
-        </div>
-        <div class="status-item" role="listitem">
-          <div class="status-icon" aria-hidden="true">⚡</div>
-          <div class="progress-bar" aria-label="Energia">
-            <div id="energyBar" class="progress-fill"></div>
-          </div>
+        <div class="den-actions">
+          <button id="sleepBtn" class="primary-btn scene-action" type="button">Spegni le luci</button>
+          <button id="statsToggleBtn" class="secondary-btn scene-action" type="button">Apri il diario</button>
         </div>
       </div>
-
-      <div class="actions-grid" role="group" aria-label="Azioni">
-        <button id="feedBtn" class="action-btn">
-          <span class="btn-icon" aria-hidden="true">
-            <img
-              src="src/assets/menu-icons/icon-food.png"
-              srcset="src/assets/menu-icons/icon-food.png 1x, src/assets/menu-icons/icon-food@2x.png 2x, src/assets/menu-icons/icon-food@3x.png 3x"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width="56"
-              height="56"
-            />
-          </span>
-          <span class="btn-label">Nutri</span>
-        </button>
-        <button id="playBtn" class="action-btn">
-          <span class="btn-icon" aria-hidden="true">
-            <img
-              src="src/assets/menu-icons/icon-games.png"
-              srcset="src/assets/menu-icons/icon-games.png 1x, src/assets/menu-icons/icon-games@2x.png 2x, src/assets/menu-icons/icon-games@3x.png 3x"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width="56"
-              height="56"
-            />
-          </span>
-          <span class="btn-label">Gioca</span>
-        </button>
-        <button id="bathBtn" class="action-btn">
-          <span class="btn-icon" aria-hidden="true">
-            <img
-              src="src/assets/menu-icons/icon-hygiene.png"
-              srcset="src/assets/menu-icons/icon-hygiene.png 1x, src/assets/menu-icons/icon-hygiene@2x.png 2x, src/assets/menu-icons/icon-hygiene@3x.png 3x"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width="56"
-              height="56"
-            />
-          </span>
-          <span class="btn-label">Lava</span>
-        </button>
-        <button id="sleepBtn" class="action-btn">
-          <span class="btn-icon" aria-hidden="true">
-            <img
-              src="src/assets/menu-icons/icon-health.png"
-              srcset="src/assets/menu-icons/icon-health.png 1x, src/assets/menu-icons/icon-health@2x.png 2x, src/assets/menu-icons/icon-health@3x.png 3x"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width="56"
-              height="56"
-            />
-          </span>
-          <span class="btn-label">Dormi</span>
-        </button>
-      </div>
-    </section>
-
-    <section id="shopPage" class="page-content hidden" aria-hidden="true">
-      <div class="page-header">
-        <h2>Negozio</h2>
-        <p>Personalizza la tua lontra!</p>
-      </div>
-      <div class="shop-grid">
-        <div class="shop-item">
-          <div class="item-preview" aria-hidden="true">🎩</div>
-          <div class="item-details">
-            <h3>Cappello</h3>
-            <span class="price">50 🪙</span>
+      <div id="denJournal" class="den-journal hidden" aria-hidden="true">
+        <div class="den-journal__header">
+          <h2>Diario di Pebble</h2>
+          <p class="small-text">Statistiche e preferenze del tuo compagno di fiume.</p>
+        </div>
+        <div class="status-container" role="list">
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">🍗</div>
+            <div class="progress-bar" aria-label="Fame">
+              <div id="hungerBar" class="progress-fill"></div>
+            </div>
           </div>
-          <button class="buy-btn" data-price="50" data-item="hat">Compra</button>
-        </div>
-        <div class="shop-item">
-          <div class="item-preview" aria-hidden="true">🕶️</div>
-          <div class="item-details">
-            <h3>Occhiali</h3>
-            <span class="price">120 🪙</span>
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">🎉</div>
+            <div class="progress-bar" aria-label="Felicità">
+              <div id="happyBar" class="progress-fill"></div>
+            </div>
           </div>
-          <button class="buy-btn" data-price="120" data-item="sunglasses">Compra</button>
-        </div>
-        <div class="shop-item">
-          <div class="item-preview" aria-hidden="true">🧣</div>
-          <div class="item-details">
-            <h3>Sciarpa</h3>
-            <span class="price">200 🪙</span>
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">🧼</div>
+            <div class="progress-bar" aria-label="Pulizia">
+              <div id="cleanBar" class="progress-fill"></div>
+            </div>
           </div>
-          <button class="buy-btn" data-price="200" data-item="scarf">Compra</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="statsPage" class="page-content hidden" aria-hidden="true">
-      <div class="page-header">
-        <h2>Statistiche</h2>
-      </div>
-      <div class="stats-card">
-        <div class="stat-row">
-          <span>🪙 Monete totali</span>
-          <span id="statCoins" class="stat-value">0</span>
-        </div>
-        <div class="stat-row">
-          <span>🎮 Partite giocate</span>
-          <span id="statGames" class="stat-value">0</span>
-        </div>
-        <div class="stat-row">
-          <span>🐟 Pesci catturati</span>
-          <span id="statFish" class="stat-value">0</span>
-        </div>
-        <div class="stat-row">
-          <span>🎩 Oggetti acquistati</span>
-          <span id="statItems" class="stat-value">0</span>
-        </div>
-      </div>
-      <div class="inventory-card">
-        <h3>Collezione</h3>
-        <p id="inventoryEmpty" class="small-text">Ancora nessun ricordo trovato. Torna più tardi per scoprire nuove sorprese!</p>
-        <ul id="inventoryList" class="inventory-list hidden" aria-live="polite"></ul>
-      </div>
-      <div class="stats-card" id="stonePolishingCard">
-        <h3>Zen: Levigatura del sasso</h3>
-        <p id="stonePolishingStatus" class="small-text">Premi Inizia e strofina per rivelare il sasso lucente.</p>
-        <div id="stonePolishingWrapper" class="stone-polishing-container hidden" aria-live="polite"></div>
-        <button id="stonePolishingStartBtn" class="primary-btn" type="button">Inizia</button>
-      </div>
-      <div class="settings-card">
-        <h3>Impostazioni</h3>
-        <label class="toggle-row">
-          <span>Statistiche anonime</span>
-          <input type="checkbox" id="analyticsOptInToggle" />
-          <span class="toggle-switch"></span>
-        </label>
-        <p id="analyticsSummary" class="small-text">Statistiche disattivate.</p>
-        <div class="theme-section">
-          <h4>Tema</h4>
-          <p class="small-text">Scegli l'atmosfera: comfort abbassa la luminosità serale.</p>
-          <div class="theme-actions">
-            <button id="themeLightBtn" class="secondary-btn" type="button">Luce</button>
-            <button id="themeComfortBtn" class="secondary-btn" type="button">Comfort</button>
-          </div>
-        </div>
-        <div class="notification-section">
-          <h4>Promemoria lontra</h4>
-          <p id="notificationUnsupported" class="small-text warning-text hidden">Il tuo dispositivo non supporta le notifiche push.</p>
-          <p id="notificationStatus" class="small-text">Promemoria disattivati.</p>
-          <p id="notificationNextDetails" class="small-text"></p>
-          <div class="notification-actions">
-            <button id="notificationEnableBtn" class="primary-btn" type="button">Attiva promemoria</button>
-            <button id="notificationDisableBtn" class="secondary-btn" type="button">Disattiva</button>
-          </div>
-        </div>
-        <div class="backup-section">
-          <h4>Backup salvataggi</h4>
-          <p class="small-text">Esporta un file di sicurezza o ripristina i tuoi progressi su un nuovo dispositivo.</p>
-          <div class="backup-actions">
-            <button id="backupExportBtn" class="secondary-btn">Scarica backup</button>
-            <button id="backupImportBtn" class="secondary-btn">Ripristina backup</button>
-          </div>
-          <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
-        </div>
-        <div class="cloud-sync-section">
-          <h4>Sincronizzazione cloud</h4>
-          <p id="cloudSyncConfigWarning" class="small-text warning-text hidden">Imposta le chiavi Supabase in config.js per attivare il cloud sync.</p>
-          <p id="cloudSyncStatus" class="small-text">Sincronizzazione cloud non attiva.</p>
-          <div id="cloudSyncCodeWrapper" class="cloud-code-row hidden" aria-live="polite">
-            <code id="cloudSyncCode" class="cloud-code">----</code>
-            <button id="cloudSyncCopyBtn" class="small-btn" type="button">Copia codice</button>
-          </div>
-          <div class="cloud-sync-actions">
-            <button id="cloudSyncEnableBtn" class="primary-btn" type="button">Attiva cloud sync</button>
-            <button id="cloudSyncSyncBtn" class="secondary-btn hidden" type="button">Sincronizza ora</button>
-            <button id="cloudSyncDisableBtn" class="secondary-btn danger hidden" type="button">Disattiva</button>
-          </div>
-          <div class="cloud-sync-import">
-            <label for="cloudSyncCodeInput" class="small-text">Hai già un codice? Inseriscilo per recuperare la tua lontra.</label>
-            <div class="cloud-sync-input">
-              <input id="cloudSyncCodeInput" type="text" inputmode="text" autocomplete="off" maxlength="64" placeholder="es. abcd-1234-efgh" />
-              <button id="cloudSyncImportBtn" class="secondary-btn" type="button">Collega dispositivo</button>
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">⚡</div>
+            <div class="progress-bar" aria-label="Energia">
+              <div id="energyBar" class="progress-fill"></div>
             </div>
           </div>
         </div>
-        <button id="resetBtn" class="danger-btn">Reset Gioco</button>
+        <div class="den-journal__grid">
+          <div class="stats-card">
+            <div class="stat-row">
+              <span>🪙 Sassolini totali</span>
+              <span id="statCoins" class="stat-value">0</span>
+            </div>
+            <div class="stat-row">
+              <span>🎮 Giochi completati</span>
+              <span id="statGames" class="stat-value">0</span>
+            </div>
+            <div class="stat-row">
+              <span>🐟 Pesci catturati</span>
+              <span id="statFish" class="stat-value">0</span>
+            </div>
+            <div class="stat-row">
+              <span>🎩 Oggetti acquistati</span>
+              <span id="statItems" class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="inventory-card">
+            <h3>Collezione</h3>
+            <p id="inventoryEmpty" class="small-text">Ancora nessun ricordo trovato. Torna più tardi per scoprire nuove sorprese!</p>
+            <ul id="inventoryList" class="inventory-list hidden" aria-live="polite"></ul>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>Impostazioni</h3>
+          <label class="toggle-row">
+            <span>Statistiche anonime</span>
+            <input type="checkbox" id="analyticsOptInToggle" />
+            <span class="toggle-switch"></span>
+          </label>
+          <p id="analyticsSummary" class="small-text">Statistiche disattivate.</p>
+          <div class="theme-section">
+            <h4>Tema</h4>
+            <p class="small-text">Scegli l'atmosfera: comfort abbassa la luminosità serale.</p>
+            <div class="theme-actions">
+              <button id="themeLightBtn" class="secondary-btn" type="button">Luce</button>
+              <button id="themeComfortBtn" class="secondary-btn" type="button">Comfort</button>
+            </div>
+          </div>
+          <div class="notification-section">
+            <h4>Promemoria lontra</h4>
+            <p id="notificationUnsupported" class="small-text warning-text hidden">Il tuo dispositivo non supporta le notifiche push.</p>
+            <p id="notificationStatus" class="small-text">Promemoria disattivati.</p>
+            <p id="notificationNextDetails" class="small-text"></p>
+            <div class="notification-actions">
+              <button id="notificationEnableBtn" class="primary-btn" type="button">Attiva promemoria</button>
+              <button id="notificationDisableBtn" class="secondary-btn" type="button">Disattiva</button>
+            </div>
+          </div>
+          <div class="backup-section">
+            <h4>Backup salvataggi</h4>
+            <p class="small-text">Esporta un file di sicurezza o ripristina i tuoi progressi su un nuovo dispositivo.</p>
+            <div class="backup-actions">
+              <button id="backupExportBtn" class="secondary-btn">Scarica backup</button>
+              <button id="backupImportBtn" class="secondary-btn">Ripristina backup</button>
+            </div>
+            <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
+          </div>
+          <div class="cloud-sync-section">
+            <h4>Sincronizzazione cloud</h4>
+            <p id="cloudSyncConfigWarning" class="small-text warning-text hidden">Imposta le chiavi Supabase in config.js per attivare il cloud sync.</p>
+            <p id="cloudSyncStatus" class="small-text">Sincronizzazione cloud non attiva.</p>
+            <div id="cloudSyncCodeWrapper" class="cloud-code-row hidden" aria-live="polite">
+              <code id="cloudSyncCode" class="cloud-code">----</code>
+              <button id="cloudSyncCopyBtn" class="small-btn" type="button">Copia codice</button>
+            </div>
+            <div class="cloud-sync-actions">
+              <button id="cloudSyncEnableBtn" class="primary-btn" type="button">Attiva cloud sync</button>
+              <button id="cloudSyncSyncBtn" class="secondary-btn hidden" type="button">Sincronizza ora</button>
+              <button id="cloudSyncDisableBtn" class="secondary-btn danger hidden" type="button">Disattiva</button>
+            </div>
+            <div class="cloud-sync-import">
+              <label for="cloudSyncCodeInput" class="small-text">Hai già un codice? Inseriscilo per recuperare la tua lontra.</label>
+              <div class="cloud-sync-input">
+                <input id="cloudSyncCodeInput" type="text" inputmode="text" autocomplete="off" maxlength="64" placeholder="es. abcd-1234-efgh" />
+                <button id="cloudSyncImportBtn" class="secondary-btn" type="button">Collega dispositivo</button>
+              </div>
+            </div>
+          </div>
+          <button id="resetBtn" class="danger-btn">Reset Gioco</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="kitchenPage" class="scene kitchen-scene hidden" aria-hidden="true" aria-label="La roccia del picnic">
+      <div class="scene-frame">
+        <div class="kitchen-otter" aria-live="polite">
+          <img
+            class="otter-img"
+            src="src/assets/otter/otter_neutral.png"
+            alt="Pebble attende uno spuntino"
+          />
+        </div>
+        <p class="scene-instructions">Trascina uno snack sulla lontra per riempirle la pancia.</p>
+        <div id="kitchenDropZone" class="kitchen-dropzone" aria-label="Area dove servire il cibo"></div>
+      </div>
+      <div class="food-drawer" aria-label="Dispensa del picnic">
+        <button class="food-item" draggable="true" data-food="fish">🐟 Pesce fresco</button>
+        <button class="food-item" draggable="true" data-food="berry">🍓 Frutti di bosco</button>
+        <button class="food-item" draggable="true" data-food="clam">🦪 Vongola</button>
+      </div>
+      <button id="feedBtn" class="visually-hidden" type="button">Nutri</button>
+    </section>
+
+    <section id="hygienePage" class="scene hygiene-scene hidden" aria-hidden="true" aria-label="Il fiume basso">
+      <div class="scene-frame">
+        <div class="hygiene-river">
+          <div class="hygiene-otter" aria-live="polite">
+            <img
+              class="otter-img"
+              src="src/assets/otter/otter_neutral.png"
+              alt="Pebble fa il bagnetto"
+            />
+            <div class="hygiene-bubbles" aria-hidden="true"></div>
+          </div>
+          <div class="hygiene-tools">
+            <button id="bathBtn" class="primary-btn scene-action" type="button">Passa la spugna</button>
+          </div>
+        </div>
+        <p class="scene-instructions">Massaggia la lontra con movimenti circolari per farla brillare.</p>
+      </div>
+    </section>
+
+    <section id="gamesPage" class="scene games-scene hidden" aria-hidden="true" aria-label="Il prato dei giochi">
+      <div class="scene-frame">
+        <div class="games-otter" aria-live="polite">
+          <img
+            class="otter-img"
+            src="src/assets/otter/otter_happy.png"
+            alt="Pebble scalpita per giocare"
+          />
+        </div>
+        <p class="scene-instructions">Scegli un'attività per divertirti insieme a Pebble.</p>
+        <div class="games-grid">
+          <button id="playBtn" class="game-card" type="button">
+            <span class="game-card__icon" aria-hidden="true">🎣</span>
+            <span class="game-card__title">Acchiappa i pesci</span>
+            <span class="game-card__meta">Mini-gioco attivo • 10s</span>
+          </button>
+          <div class="game-card">
+            <span class="game-card__icon" aria-hidden="true">🪨</span>
+            <span class="game-card__title">Stone Polishing</span>
+            <p id="stonePolishingStatus" class="game-card__meta">Premi Inizia e strofina per rivelare il sasso lucente.</p>
+            <div id="stonePolishingWrapper" class="stone-polishing-container hidden" aria-live="polite"></div>
+            <button id="stonePolishingStartBtn" class="secondary-btn" type="button">Inizia rituale</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="shopPage" class="scene shop-scene hidden" aria-hidden="true" aria-label="Il mercante della valle">
+      <div class="scene-frame">
+        <div class="page-header">
+          <h2>Bancarella del mercante</h2>
+          <p>Scambia i tuoi sassolini per nuovi accessori e snack.</p>
+        </div>
+        <div class="shop-grid">
+          <div class="shop-item">
+            <div class="item-preview" aria-hidden="true">🎩</div>
+            <div class="item-details">
+              <h3>Cappello</h3>
+              <span class="price">50 🪙</span>
+            </div>
+            <button class="buy-btn" data-price="50" data-item="hat">Compra</button>
+          </div>
+          <div class="shop-item">
+            <div class="item-preview" aria-hidden="true">🕶️</div>
+            <div class="item-details">
+              <h3>Occhiali</h3>
+              <span class="price">120 🪙</span>
+            </div>
+            <button class="buy-btn" data-price="120" data-item="sunglasses">Compra</button>
+          </div>
+          <div class="shop-item">
+            <div class="item-preview" aria-hidden="true">🧣</div>
+            <div class="item-details">
+              <h3>Sciarpa</h3>
+              <span class="price">200 🪙</span>
+            </div>
+            <button class="buy-btn" data-price="200" data-item="scarf">Compra</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -385,7 +400,7 @@
   </div>
 
   <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" data-page="home" aria-pressed="true">
+    <button class="nav-item active" data-page="den" aria-pressed="true">
       <span class="nav-icon" aria-hidden="true">
         <img
           src="src/assets/menu-icons/icon-home.png"
@@ -397,7 +412,49 @@
           height="32"
         />
       </span>
-      <span class="nav-label">Home</span>
+      <span class="nav-label">Tana</span>
+    </button>
+    <button class="nav-item" data-page="kitchen" aria-pressed="false">
+      <span class="nav-icon" aria-hidden="true">
+        <img
+          src="src/assets/menu-icons/icon-food.png"
+          srcset="src/assets/menu-icons/icon-food.png 1x, src/assets/menu-icons/icon-food@2x.png 2x, src/assets/menu-icons/icon-food@3x.png 3x"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="32"
+          height="32"
+        />
+      </span>
+      <span class="nav-label">Cucina</span>
+    </button>
+    <button class="nav-item" data-page="hygiene" aria-pressed="false">
+      <span class="nav-icon" aria-hidden="true">
+        <img
+          src="src/assets/menu-icons/icon-hygiene.png"
+          srcset="src/assets/menu-icons/icon-hygiene.png 1x, src/assets/menu-icons/icon-hygiene@2x.png 2x, src/assets/menu-icons/icon-hygiene@3x.png 3x"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="32"
+          height="32"
+        />
+      </span>
+      <span class="nav-label">Fiume</span>
+    </button>
+    <button class="nav-item" data-page="games" aria-pressed="false">
+      <span class="nav-icon" aria-hidden="true">
+        <img
+          src="src/assets/menu-icons/icon-games.png"
+          srcset="src/assets/menu-icons/icon-games.png 1x, src/assets/menu-icons/icon-games@2x.png 2x, src/assets/menu-icons/icon-games@3x.png 3x"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="32"
+          height="32"
+        />
+      </span>
+      <span class="nav-label">Giochi</span>
     </button>
     <button class="nav-item" data-page="shop" aria-pressed="false">
       <span class="nav-icon" aria-hidden="true">
@@ -411,11 +468,7 @@
           height="32"
         />
       </span>
-      <span class="nav-label">Negozio</span>
-    </button>
-    <button class="nav-item" data-page="stats" aria-pressed="false">
-      <span class="nav-icon" aria-hidden="true">📊</span>
-      <span class="nav-label">Stats</span>
+      <span class="nav-label">Mercante</span>
     </button>
   </nav>
 

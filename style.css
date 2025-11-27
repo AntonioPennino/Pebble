@@ -208,7 +208,7 @@ main.no-scroll {
   overflow: hidden;
 }
 
-.page-content {
+.scene {
   display: none;
   padding: 16px;
   max-width: 640px;
@@ -218,7 +218,7 @@ main.no-scroll {
   padding-bottom: 100px;
 }
 
-.page-content.active {
+.scene.active {
   display: block;
 }
 
@@ -1282,7 +1282,7 @@ body.theme-comfort .tutorial-overlay {
     box-shadow: var(--bottom-nav-shadow);
     transition: background 0.3s ease, box-shadow 0.3s ease;
   }
-  .page-content {
+  .scene {
     padding: 0;
     margin: 0;
     padding-bottom: 0;
@@ -1382,7 +1382,7 @@ body.theme-comfort .tutorial-overlay {
     font-size: 0.75rem;
   }
 
-  .page-content {
+  .scene {
     padding-bottom: 108px;
   }
 
@@ -1501,7 +1501,7 @@ body.theme-comfort .tutorial-overlay {
     padding-bottom: calc(var(--bottom-nav-height) + 12px + var(--safe-area-bottom));
   }
 
-  .page-content {
+  .scene {
     padding-bottom: 100px;
   }
 
