@@ -1,5 +1,5 @@
 const STATE_KEY = 'otter_state_v2';
-const STATE_VERSION = 2;
+const STATE_VERSION = 3;
 const BACKUP_SCHEMA_VERSION = 1;
 const listeners = [];
 let persistentStorageGranted = null;
@@ -37,12 +37,6 @@ function createDefaultState() {
             lastEventAt: null
         },
         criticalHintsShown: {},
-        cloudSync: {
-            enabled: false,
-            recordId: null,
-            lastSyncedAt: null,
-            lastRemoteUpdate: null
-        },
         notifications: {
             enabled: false,
             permission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
@@ -64,7 +58,7 @@ function mergeState(partial) {
     if (!partial) {
         return defaults;
     }
-    return {
+    const merged = {
         ...defaults,
         ...partial,
         version: STATE_VERSION,
@@ -90,15 +84,6 @@ function mergeState(partial) {
                 ...((partial.analytics && partial.analytics.events) || {})
             }
         },
-        cloudSync: {
-            ...defaults.cloudSync,
-            ...(partial.cloudSync ?? {}),
-            recordId: typeof partial.cloudSync?.recordId === 'string'
-                ? partial.cloudSync.recordId.slice(0, 128)
-                : defaults.cloudSync.recordId,
-            lastSyncedAt: partial.cloudSync?.lastSyncedAt ?? defaults.cloudSync.lastSyncedAt,
-            lastRemoteUpdate: partial.cloudSync?.lastRemoteUpdate ?? defaults.cloudSync.lastRemoteUpdate
-        },
         notifications: {
             ...defaults.notifications,
             ...(partial.notifications ?? {}),
@@ -116,6 +101,10 @@ function mergeState(partial) {
             ...(partial.criticalHintsShown ?? {})
         }
     };
+    if ('cloudSync' in merged) {
+        delete merged.cloudSync;
+    }
+    return merged;
 }
 function cloneState(source) {
     return JSON.parse(JSON.stringify(source));
@@ -261,11 +250,6 @@ export function resetCriticalMessage(stat) {
             delete draft.criticalHintsShown[stat];
         }
     }, { silent: true });
-}
-export function updateCloudSyncInfo(mutator) {
-    updateState(draft => {
-        mutator(draft.cloudSync);
-    });
 }
 export function setThemeMode(mode) {
     updateState(draft => {

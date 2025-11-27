@@ -41,6 +41,9 @@ export class GameState {
     getStats() {
         return this.cloneStats(this.stats);
     }
+    getPlayerId() {
+        return this.playerId;
+    }
     getInventory() {
         return [...this.inventory];
     }
@@ -95,14 +98,23 @@ export class GameState {
         if (!supabase) {
             return;
         }
+        if (GameState.supabaseUnavailable) {
+            return;
+        }
         try {
             const { data, error } = await supabase
                 .from('pebble_game_state')
                 .select('stats, last_login, inventory, updated_at')
                 .eq('id', this.playerId)
                 .maybeSingle();
-            if (error && error.code !== 'PGRST116') {
-                throw error;
+            if (error) {
+                if (error.code === 'PGRST205') {
+                    GameState.markSupabaseUnavailable();
+                    return;
+                }
+                if (error.code !== 'PGRST116') {
+                    throw error;
+                }
             }
             const remote = (data ?? null);
             if (remote) {
@@ -119,13 +131,31 @@ export class GameState {
                 .from('pebble_game_state')
                 .upsert(payload, { onConflict: 'id' });
             if (upsertError) {
+                if (upsertError.code === 'PGRST205') {
+                    GameState.markSupabaseUnavailable();
+                    return;
+                }
                 throw upsertError;
             }
             this.writeToStorage();
             this.syncStatsToLegacyState();
         }
         catch (error) {
+            if (GameState.isMissingTableError(error)) {
+                GameState.markSupabaseUnavailable();
+                return;
+            }
             console.warn('Impossibile sincronizzare il GameState con Supabase', error);
+        }
+    }
+    static isMissingTableError(error) {
+        return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'PGRST205');
+    }
+    static markSupabaseUnavailable() {
+        GameState.supabaseUnavailable = true;
+        if (!GameState.supabaseWarningLogged) {
+            GameState.supabaseWarningLogged = true;
+            console.info('[Pebble] Supabase non configurato per pebble_game_state; sincronizzazione core stats disattivata. Consulta README per lo schema oppure ignora se usi solo il backup cloud.');
         }
     }
     mergeRemoteState(remote) {
@@ -365,6 +395,8 @@ export class GameState {
     }
 }
 GameState.instance = null;
+GameState.supabaseUnavailable = false;
+GameState.supabaseWarningLogged = false;
 export function calculateOfflineProgress(now) {
     return GameState.getInstance().calculateOfflineProgress(now);
 }

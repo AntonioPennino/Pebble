@@ -1,6 +1,7 @@
 import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPushConfigured } from './config.js';
 import { getSupabaseClient } from './cloudSync.js';
 import { getState, markNotificationPrompted, markNotificationSent, updateNotificationSettings } from './state.js';
+import { getGameStateInstance } from './gameStateManager.js';
 import { recordEvent } from './analytics.js';
 const LOW_STAT_MESSAGES = {
     hunger: {
@@ -150,7 +151,7 @@ async function persistSubscription(subscription) {
     const payload = {
         id,
         client_id: currentState.notifications.clientId,
-        record_id: currentState.cloudSync.recordId,
+        record_id: resolveSyncRecordId(),
         endpoint: json.endpoint,
         subscription: json,
         updated_at: new Date().toISOString()
@@ -201,7 +202,7 @@ async function triggerRemoteReminder(stat) {
             body: {
                 stat,
                 petName: state.petName,
-                recordId: state.cloudSync.recordId,
+                recordId: resolveSyncRecordId(),
                 clientId: state.notifications.clientId,
                 subscriptionId: state.notifications.subscriptionId
             }
@@ -228,4 +229,7 @@ async function hashEndpoint(endpoint) {
     const view = new DataView(hash);
     const bytes = new Uint8Array(view.buffer);
     return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+function resolveSyncRecordId() {
+    return getGameStateInstance().getPlayerId();
 }

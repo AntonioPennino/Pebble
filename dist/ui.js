@@ -4,8 +4,6 @@ import { audioManager, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 import { mountStonePolishingActivity } from './stonePolishing.js';
-import { disableCloudSync, enableCloudSync, forceCloudPush, getFormattedLocalSyncCode, initCloudSyncAutoPush, onCloudSyncEvent, pullCloudState } from './cloudSyncManager.js';
-import { isCloudSyncConfigured } from './config.js';
 import { applyTheme } from './theme.js';
 import { disableNotifications, enableNotifications, notifyLowStat, notificationsSupported } from './notifications.js';
 import { getGameStateInstance, syncManagerWithLegacyCoreStats } from './gameStateManager.js';
@@ -55,9 +53,11 @@ function updateThemeButtons(mode) {
     lightBtn?.classList.toggle('active', mode === 'light');
     comfortBtn?.classList.toggle('active', mode === 'comfort');
 }
-let currentMood = 'neutral';
-let currentOutfit = 'base';
-let hasRenderedOnce = false;
+const otterElements = new Set();
+const otterRenderCache = new WeakMap();
+const otterAnimationTimers = new WeakMap();
+let latestMood = 'neutral';
+let latestAccessories = { hat: false, scarf: false, sunglasses: false };
 let alertTimeoutId = null;
 let updateConfirm = null;
 let updateDismiss = null;
@@ -125,60 +125,6 @@ function refreshNotificationUI(state) {
             }
         });
         nextList.textContent = items.length ? `Ultimi promemoria: ${items.join(' · ')}` : 'Nessun promemoria inviato finora.';
-    }
-}
-function refreshCloudSyncUI(state) {
-    const statusEl = $('cloudSyncStatus');
-    const codeWrapper = $('cloudSyncCodeWrapper');
-    const codeValue = $('cloudSyncCode');
-    const enableBtn = $('cloudSyncEnableBtn');
-    const syncBtn = $('cloudSyncSyncBtn');
-    const disableBtn = $('cloudSyncDisableBtn');
-    const copyBtn = $('cloudSyncCopyBtn');
-    const importInput = $('cloudSyncCodeInput');
-    const configWarning = $('cloudSyncConfigWarning');
-    const configured = isCloudSyncConfigured();
-    if (configWarning) {
-        configWarning.classList.toggle('hidden', configured);
-    }
-    if (!configured) {
-        if (statusEl) {
-            statusEl.textContent = 'Configura Supabase per abilitare la sincronizzazione cloud.';
-        }
-        enableBtn?.setAttribute('disabled', 'true');
-        syncBtn?.setAttribute('disabled', 'true');
-        disableBtn?.setAttribute('disabled', 'true');
-        copyBtn?.setAttribute('disabled', 'true');
-        importInput?.setAttribute('disabled', 'true');
-        codeWrapper?.classList.add('hidden');
-        return;
-    }
-    enableBtn?.removeAttribute('disabled');
-    importInput?.removeAttribute('disabled');
-    const hasCloud = state.cloudSync.enabled && Boolean(state.cloudSync.recordId);
-    if (statusEl) {
-        statusEl.textContent = hasCloud
-            ? `Ultimo salvataggio: ${formatDateTime(state.cloudSync.lastSyncedAt)}`
-            : 'Sincronizzazione cloud non attiva.';
-    }
-    if (hasCloud) {
-        const formattedCode = getFormattedLocalSyncCode();
-        if (codeValue) {
-            codeValue.textContent = formattedCode;
-        }
-        codeWrapper?.classList.remove('hidden');
-        syncBtn?.classList.remove('hidden');
-        disableBtn?.classList.remove('hidden');
-        syncBtn?.removeAttribute('disabled');
-        disableBtn?.removeAttribute('disabled');
-        copyBtn?.removeAttribute('disabled');
-        enableBtn?.classList.add('hidden');
-    }
-    else {
-        codeWrapper?.classList.add('hidden');
-        syncBtn?.classList.add('hidden');
-        disableBtn?.classList.add('hidden');
-        enableBtn?.classList.remove('hidden');
     }
 }
 function $(id) {
@@ -345,23 +291,50 @@ function hideInstallBanner() {
     banner.classList.add('hidden');
     installBannerVisible = false;
 }
-function setExpression(mood, accessories) {
-    const img = $('otterImage');
-    if (!img) {
-        return;
-    }
-    const { src, outfit } = buildOtterImage(`otter_${mood}`, accessories);
-    if (hasRenderedOnce && currentMood === mood && currentOutfit === outfit) {
-        return;
-    }
-    img.src = src;
-    img.classList.remove('happy', 'sad', 'sleepy');
+function collectOtterElements() {
+    otterElements.clear();
+    document.querySelectorAll('.otter-img').forEach(img => {
+        otterElements.add(img);
+    });
+}
+function applyMoodClasses(element, mood) {
+    element.classList.remove('happy', 'sad', 'sleepy');
     if (mood !== 'neutral') {
-        img.classList.add(mood);
+        element.classList.add(mood);
     }
-    currentMood = mood;
-    currentOutfit = outfit;
-    hasRenderedOnce = true;
+}
+function applyExpressionToElement(element, mood, accessories, force = false) {
+    const { src, outfit } = buildOtterImage(`otter_${mood}`, accessories);
+    const cached = otterRenderCache.get(element);
+    if (!force && cached && cached.mood === mood && cached.outfit === outfit) {
+        return;
+    }
+    otterRenderCache.set(element, { mood, outfit });
+    element.src = src;
+    applyMoodClasses(element, mood);
+}
+function syncOtterExpressions(options = {}) {
+    if (!otterElements.size) {
+        collectOtterElements();
+    }
+    const mood = latestMood;
+    const accessories = latestAccessories;
+    otterElements.forEach(element => {
+        if (!options.force && element.dataset.animating) {
+            return;
+        }
+        applyExpressionToElement(element, mood, accessories, options.force ?? false);
+    });
+}
+function getActiveOtterElement() {
+    const activeScene = document.querySelector('.scene.active');
+    if (activeScene) {
+        const activeOtter = activeScene.querySelector('.otter-img');
+        if (activeOtter) {
+            return activeOtter;
+        }
+    }
+    return $('otterImage');
 }
 function computeMood(core) {
     if (core.energy < 30) {
@@ -513,45 +486,61 @@ function render() {
     if (coinsLabel) {
         coinsLabel.textContent = String(state.coins);
     }
-    setExpression(computeMood(coreStats), pickAccessories(state));
+    const mood = computeMood(coreStats);
+    const accessories = pickAccessories(state);
+    latestMood = mood;
+    latestAccessories = accessories;
+    syncOtterExpressions();
     renderInventory(coreManager.getInventory());
     updateStatsView();
     evaluateCriticalWarnings();
     updateAnalyticsToggle(state.analyticsOptIn);
-    refreshCloudSyncUI(state);
     refreshNotificationUI(state);
 }
 function triggerOtterAnimation(animation) {
-    const img = $('otterImage');
-    if (!img) {
+    const target = getActiveOtterElement();
+    if (!target) {
         return;
     }
-    // Optional: Switch to specific action images if available
-    const baseAccessories = pickAccessories(getState());
-    const resolveMood = () => computeMood(getGameStateInstance().getStats());
+    const previousTimer = otterAnimationTimers.get(target);
+    if (typeof previousTimer === 'number') {
+        window.clearTimeout(previousTimer);
+        otterAnimationTimers.delete(target);
+    }
+    target.classList.remove('hop', 'eating', 'bathing', 'rest');
+    target.classList.remove('happy', 'sad', 'sleepy');
+    target.dataset.animating = animation;
+    const accessories = pickAccessories(getState());
+    const applyAction = (assetBase, classes, duration) => {
+        const { src } = buildOtterImage(assetBase, accessories);
+        otterRenderCache.delete(target);
+        target.src = src;
+        if (classes.length) {
+            target.classList.add(...classes);
+        }
+        const timerId = window.setTimeout(() => {
+            if (classes.length) {
+                target.classList.remove(...classes);
+            }
+            delete target.dataset.animating;
+            otterAnimationTimers.delete(target);
+            const state = getState();
+            const mood = computeMood(getGameStateInstance().getStats());
+            const refreshedAccessories = pickAccessories(state);
+            latestMood = mood;
+            latestAccessories = refreshedAccessories;
+            syncOtterExpressions({ force: true });
+        }, duration);
+        otterAnimationTimers.set(target, timerId);
+    };
     if (animation === 'feed') {
-        img.src = buildOtterImage('otter_eat', baseAccessories).src;
-        img.classList.add('hop', 'eating');
-        window.setTimeout(() => {
-            img.classList.remove('hop', 'eating');
-            setExpression(resolveMood(), pickAccessories(getState()));
-        }, 1500);
+        applyAction('otter_eat', ['hop', 'eating'], 1500);
     }
     else if (animation === 'bathe') {
-        img.src = buildOtterImage('otter_bath', baseAccessories).src;
-        img.classList.add('bathing');
-        window.setTimeout(() => {
-            img.classList.remove('bathing');
-            setExpression(resolveMood(), pickAccessories(getState()));
-        }, 1600);
+        applyAction('otter_bath', ['bathing'], 1600);
     }
     else if (animation === 'sleep') {
-        img.src = buildOtterImage('otter_sleepy', baseAccessories).src;
-        img.classList.add('rest');
-        window.setTimeout(() => {
-            img.classList.remove('rest');
-            setExpression(resolveMood(), pickAccessories(getState()));
-        }, 4000);
+        applyAction('otter_sleepy', ['rest'], 4000);
     }
 }
 function initActionButtons() {
@@ -592,10 +581,20 @@ function initKitchenScene() {
     const dropZone = $('kitchenDropZone');
     const foodButtons = Array.from(document.querySelectorAll('.food-item'));
     const quickFeedBtn = $('kitchenFeedBtn');
+    const kitchenOtter = document.querySelector('#kitchenPage .kitchen-otter');
+    const kitchenOtterImg = kitchenOtter?.querySelector('.otter-img') ?? null;
     if (!dropZone || !foodButtons.length) {
         return;
     }
+    const dropTargets = Array.from(new Set([dropZone, kitchenOtter, kitchenOtterImg].filter((el) => Boolean(el))));
     let currentFood = null;
+    let suppressNextClick = false;
+    let touchDrag = null;
+    const toggleDropHover = (active) => {
+        dropTargets.forEach(target => {
+            target.classList.toggle('drag-over', active);
+        });
+    };
     const setActiveFood = (button) => {
         foodButtons.forEach(btn => {
             btn.classList.toggle('active', btn === button);
@@ -610,24 +609,102 @@ function initKitchenScene() {
         window.setTimeout(() => dropZone.classList.remove('fed'), 1200);
     };
     const resetDragState = () => {
-        dropZone.classList.remove('drag-over');
+        toggleDropHover(false);
         currentFood = null;
         setActiveFood(null);
+        foodButtons.forEach(btn => btn.classList.remove('dragging'));
     };
-    dropZone.addEventListener('dragover', event => {
-        event.preventDefault();
-        dropZone.classList.add('drag-over');
-    });
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('drag-over');
-    });
-    dropZone.addEventListener('drop', event => {
-        event.preventDefault();
-        const transferred = event.dataTransfer?.getData('text/plain') || currentFood;
-        feedWithSnack(transferred ?? null);
+    const isTouchPointer = (event) => event.pointerType === 'touch' || event.pointerType === 'pen';
+    const isPointInsideDropTargets = (x, y) => {
+        return dropTargets.some(target => {
+            const rect = target.getBoundingClientRect();
+            return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        });
+    };
+    const finishTouchDrag = (event, drop) => {
+        if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+            return;
+        }
+        try {
+            touchDrag.button.releasePointerCapture(event.pointerId);
+        }
+        catch (error) {
+            void error;
+        }
+        if (drop) {
+            suppressNextClick = true;
+            feedWithSnack(touchDrag.foodKey);
+            window.setTimeout(() => {
+                suppressNextClick = false;
+            }, 0);
+        }
+        else {
+            suppressNextClick = false;
+        }
+        touchDrag = null;
         resetDragState();
-    });
+    };
+    const bindDropTarget = (element) => {
+        element.addEventListener('dragenter', event => {
+            event.preventDefault();
+            toggleDropHover(true);
+        });
+        element.addEventListener('dragover', event => {
+            event.preventDefault();
+            toggleDropHover(true);
+        });
+        element.addEventListener('dragleave', () => {
+            toggleDropHover(false);
+        });
+        element.addEventListener('drop', event => {
+            event.preventDefault();
+            const transferred = event.dataTransfer?.getData('text/plain') || currentFood;
+            feedWithSnack(transferred ?? null);
+            resetDragState();
+        });
+    };
+    dropTargets.forEach(target => bindDropTarget(target));
     foodButtons.forEach(button => {
+        button.addEventListener('pointerdown', event => {
+            if (!isTouchPointer(event)) {
+                return;
+            }
+            touchDrag = {
+                button,
+                pointerId: event.pointerId,
+                foodKey: button.dataset.food ?? null
+            };
+            currentFood = touchDrag.foodKey;
+            setActiveFood(button);
+            button.classList.add('dragging');
+            try {
+                button.setPointerCapture(event.pointerId);
+            }
+            catch (error) {
+                void error;
+            }
+            toggleDropHover(isPointInsideDropTargets(event.clientX, event.clientY));
+            event.preventDefault();
+        });
+        button.addEventListener('pointermove', event => {
+            if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+                return;
+            }
+            toggleDropHover(isPointInsideDropTargets(event.clientX, event.clientY));
+        });
+        button.addEventListener('pointerup', event => {
+            if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+                return;
+            }
+            const shouldDrop = isPointInsideDropTargets(event.clientX, event.clientY);
+            finishTouchDrag(event, shouldDrop);
+        });
+        button.addEventListener('pointercancel', event => {
+            if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+                return;
+            }
+            finishTouchDrag(event, false);
+        });
         button.addEventListener('dragstart', event => {
             const foodKey = button.dataset.food ?? null;
             currentFood = foodKey;
@@ -639,10 +716,13 @@ function initKitchenScene() {
             }
         });
         button.addEventListener('dragend', () => {
-            button.classList.remove('dragging');
             resetDragState();
         });
         button.addEventListener('click', () => {
+            if (suppressNextClick) {
+                suppressNextClick = false;
+                return;
+            }
             setActiveFood(button);
             currentFood = button.dataset.food ?? null;
             feedWithSnack(button.dataset.food ?? null);
@@ -713,6 +793,8 @@ function initNavigation() {
             element.classList.toggle('active', isVisible);
             element.setAttribute('aria-hidden', String(!isVisible));
         });
+        collectOtterElements();
+        syncOtterExpressions();
         recordEvent(`nav:${scene}`);
         const ambientTarget = ambientByScene[scene];
         if (ambientTarget && audioManager.hasAsset(ambientTarget.track)) {
@@ -939,132 +1021,6 @@ function initNotificationControls() {
         refreshNotificationUI(getState());
     });
 }
-function initCloudSyncUI() {
-    const enableBtn = $('cloudSyncEnableBtn');
-    const syncBtn = $('cloudSyncSyncBtn');
-    const disableBtn = $('cloudSyncDisableBtn');
-    const copyBtn = $('cloudSyncCopyBtn');
-    const importBtn = $('cloudSyncImportBtn');
-    const importInput = $('cloudSyncCodeInput');
-    enableBtn?.addEventListener('click', async () => {
-        if (!isCloudSyncConfigured()) {
-            showAlert('Configura Supabase prima di attivare la sincronizzazione.', 'warning');
-            return;
-        }
-        enableBtn.disabled = true;
-        try {
-            const result = await enableCloudSync();
-            showAlert(`Cloud sync attivata! Codice: ${result.formattedCode}`, 'info');
-        }
-        catch (error) {
-            const message = error instanceof Error ? error.message : 'Impossibile attivare il cloud sync.';
-            showAlert(message, 'warning');
-            console.error('Errore attivazione cloud sync', error);
-        }
-        finally {
-            enableBtn.disabled = false;
-            refreshCloudSyncUI(getState());
-        }
-    });
-    syncBtn?.addEventListener('click', async () => {
-        syncBtn.disabled = true;
-        try {
-            await forceCloudPush();
-            showAlert('Salvataggio sincronizzato sul cloud.', 'info');
-        }
-        catch (error) {
-            const message = error instanceof Error ? error.message : 'Sincronizzazione non riuscita.';
-            showAlert(message, 'warning');
-            console.error('Errore sincronizzazione manuale', error);
-        }
-        finally {
-            syncBtn.disabled = false;
-        }
-    });
-    disableBtn?.addEventListener('click', async () => {
-        const confirmed = window.confirm('Vuoi disattivare la sincronizzazione cloud? Il salvataggio remoto resterà disponibile.');
-        if (!confirmed) {
-            return;
-        }
-        disableBtn.disabled = true;
-        try {
-            await disableCloudSync(false);
-            showAlert('Cloud sync disattivata. Puoi riattivarla in qualsiasi momento.', 'info');
-        }
-        catch (error) {
-            const message = error instanceof Error ? error.message : 'Impossibile disattivare il cloud sync.';
-            showAlert(message, 'warning');
-            console.error('Errore disattivazione cloud sync', error);
-        }
-        finally {
-            disableBtn.disabled = false;
-            refreshCloudSyncUI(getState());
-        }
-    });
-    copyBtn?.addEventListener('click', async () => {
-        const code = getFormattedLocalSyncCode();
-        if (!code) {
-            return;
-        }
-        try {
-            await navigator.clipboard.writeText(code);
-            showAlert('Codice copiato negli appunti.', 'info');
-        }
-        catch {
-            showAlert('Non sono riuscito a copiare il codice, copialo manualmente.', 'warning');
-        }
-    });
-    importBtn?.addEventListener('click', async () => {
-        if (!importInput) {
-            return;
-        }
-        const code = importInput.value.trim();
-        if (!code) {
-            showAlert('Inserisci un codice di sincronizzazione.', 'warning');
-            return;
-        }
-        importBtn.disabled = true;
-        try {
-            const info = await pullCloudState(code);
-            showAlert(`Progressi recuperati! Bentornato ${info.petName}.`, 'info');
-            importInput.value = '';
-        }
-        catch (error) {
-            const message = error instanceof Error ? error.message : 'Non sono riuscito a recuperare quel codice.';
-            showAlert(message, 'warning');
-            console.error('Errore recupero cloud sync', error);
-        }
-        finally {
-            importBtn.disabled = false;
-            refreshCloudSyncUI(getState());
-        }
-    });
-    onCloudSyncEvent(event => {
-        if (event.type === 'status') {
-            if (event.status === 'syncing') {
-                const statusEl = $('cloudSyncStatus');
-                if (statusEl) {
-                    statusEl.textContent = 'Sincronizzazione in corso…';
-                }
-            }
-            else {
-                refreshCloudSyncUI(getState());
-            }
-            return;
-        }
-        if (event.type === 'synced') {
-            const statusEl = $('cloudSyncStatus');
-            if (statusEl) {
-                statusEl.textContent = `Ultimo salvataggio: ${formatDateTime(event.timestamp)}`;
-            }
-            return;
-        }
-        if (event.type === 'error') {
-            showAlert(event.message, 'warning');
-        }
-    });
-    refreshCloudSyncUI(getState());
-}
 function initInstallPrompt() {
     const installButton = $('installConfirm');
     const dismissButton = $('installDismiss');
@@ -1187,8 +1143,6 @@ export function initUI() {
     initThemeControls();
     initNotificationControls();
     initBackupControls();
-    initCloudSyncAutoPush();
-    initCloudSyncUI();
     initInstallPrompt();
     initNamePrompt();
     initTutorial();
@@ -1217,6 +1171,7 @@ export function initUI() {
             }
         });
     }
+    collectOtterElements();
     subscribe(() => render());
     render();
     document.addEventListener('click', () => {
