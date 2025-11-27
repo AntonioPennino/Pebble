@@ -20,6 +20,7 @@ import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } 
 import { audioManager, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
+import { mountStonePolishingActivity, StonePolishingActivity } from './stonePolishing.js';
 import {
   disableCloudSync,
   enableCloudSync,
@@ -117,6 +118,7 @@ let updateDismiss: (() => void) | null = null;
 let hasFocusedNamePrompt = false;
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 let installBannerVisible = false;
+let stonePolishingActivity: StonePolishingActivity | null = null;
 
 function formatDateTime(iso: string | null): string {
   if (!iso) {
@@ -719,6 +721,52 @@ function initBlink(): void {
   }, 4000 + Math.random() * 2000);
 }
 
+function initStonePolishing(): void {
+  const wrapper = $('stonePolishingWrapper');
+  const statusEl = $('stonePolishingStatus');
+  const startBtn = $('stonePolishingStartBtn') as HTMLButtonElement | null;
+
+  if (!wrapper || !statusEl || !startBtn) {
+    return;
+  }
+
+  const showWrapper = (): void => {
+    wrapper.classList.remove('hidden');
+  };
+
+  const updateStatus = (message: string): void => {
+    statusEl.textContent = message;
+  };
+
+  const startOrReset = async (): Promise<void> => {
+    await resumeAudioContext();
+    showWrapper();
+    updateStatus('Strofina il sasso per farlo brillare!');
+    startBtn.textContent = 'Ricomincia';
+
+    if (!stonePolishingActivity) {
+      stonePolishingActivity = mountStonePolishingActivity(wrapper, {
+        baseImage: 'src/assets/activities/stone-polished.svg',
+        playScrubSound: () => {
+          void resumeAudioContext();
+          void audioManager.playSFX('splash', true);
+        },
+        onComplete: () => {
+          updateStatus('Splendido! Il sasso è lucidissimo ✨');
+          showAlert('Il sasso brilla di nuova energia!', 'info');
+          startBtn.textContent = 'Ricomincia';
+        }
+      });
+    } else {
+      await stonePolishingActivity.reset();
+    }
+  };
+
+  startBtn.addEventListener('click', () => {
+    void startOrReset();
+  });
+}
+
 function updateAnalyticsToggle(optIn: boolean): void {
   const toggle = $('analyticsOptInToggle') as HTMLInputElement | null;
   if (toggle) {
@@ -1112,6 +1160,7 @@ export function initUI(): void {
   initNamePrompt();
   initTutorial();
   initUpdateBanner();
+  initStonePolishing();
   initGiftModal();
 
   window.addEventListener('pebble-inventory-changed', event => {

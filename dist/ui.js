@@ -3,6 +3,7 @@ import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } 
 import { audioManager, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
+import { mountStonePolishingActivity } from './stonePolishing.js';
 import { disableCloudSync, enableCloudSync, forceCloudPush, getFormattedLocalSyncCode, initCloudSyncAutoPush, onCloudSyncEvent, pullCloudState } from './cloudSyncManager.js';
 import { isCloudSyncConfigured } from './config.js';
 import { applyTheme } from './theme.js';
@@ -63,6 +64,7 @@ let updateDismiss = null;
 let hasFocusedNamePrompt = false;
 let deferredInstallPrompt = null;
 let installBannerVisible = false;
+let stonePolishingActivity = null;
 function formatDateTime(iso) {
     if (!iso) {
         return 'Mai sincronizzato';
@@ -615,6 +617,46 @@ function initBlink() {
         window.setTimeout(() => img.classList.remove('blink'), 180);
     }, 4000 + Math.random() * 2000);
 }
+function initStonePolishing() {
+    const wrapper = $('stonePolishingWrapper');
+    const statusEl = $('stonePolishingStatus');
+    const startBtn = $('stonePolishingStartBtn');
+    if (!wrapper || !statusEl || !startBtn) {
+        return;
+    }
+    const showWrapper = () => {
+        wrapper.classList.remove('hidden');
+    };
+    const updateStatus = (message) => {
+        statusEl.textContent = message;
+    };
+    const startOrReset = async () => {
+        await resumeAudioContext();
+        showWrapper();
+        updateStatus('Strofina il sasso per farlo brillare!');
+        startBtn.textContent = 'Ricomincia';
+        if (!stonePolishingActivity) {
+            stonePolishingActivity = mountStonePolishingActivity(wrapper, {
+                baseImage: 'src/assets/activities/stone-polished.svg',
+                playScrubSound: () => {
+                    void resumeAudioContext();
+                    void audioManager.playSFX('splash', true);
+                },
+                onComplete: () => {
+                    updateStatus('Splendido! Il sasso è lucidissimo ✨');
+                    showAlert('Il sasso brilla di nuova energia!', 'info');
+                    startBtn.textContent = 'Ricomincia';
+                }
+            });
+        }
+        else {
+            await stonePolishingActivity.reset();
+        }
+    };
+    startBtn.addEventListener('click', () => {
+        void startOrReset();
+    });
+}
 function updateAnalyticsToggle(optIn) {
     const toggle = $('analyticsOptInToggle');
     if (toggle) {
@@ -984,6 +1026,7 @@ export function initUI() {
     initNamePrompt();
     initTutorial();
     initUpdateBanner();
+    initStonePolishing();
     initGiftModal();
     window.addEventListener('pebble-inventory-changed', event => {
         const detail = event.detail;
