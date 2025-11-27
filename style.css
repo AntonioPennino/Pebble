@@ -36,6 +36,7 @@
   --btn-radius: 20px;
   --bottom-nav-height: 84px;
   --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+  --header-offset: calc(88px + env(safe-area-inset-top, 0px));
   
   /* Interactive */
   --secondary-btn-bg: #FFF5E6;
@@ -237,8 +238,10 @@ main {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
+  padding-top: var(--header-offset);
   padding-bottom: calc(var(--bottom-nav-height) + 28px + var(--safe-area-bottom));
   scroll-behavior: smooth;
+  scroll-padding-top: var(--header-offset);
 }
 
 main.no-scroll {
@@ -1644,15 +1647,13 @@ body.theme-comfort .tutorial-overlay {
 
 /* Responsive adjustments */
 @media (min-width: 768px) {
-  .bottom-nav {
-    display: flex;
-  }
-
   main {
     background: var(--bottom-nav-bg);
     flex-direction: row;
     gap: 32px;
     padding: 32px;
+    padding-top: max(64px, var(--header-offset));
+    padding-bottom: 48px;
     max-width: 1200px;
     margin: 0 auto;
     align-items: flex-start;
