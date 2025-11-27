@@ -755,14 +755,28 @@ function initKitchenScene(): void {
   const dropZone = $('kitchenDropZone');
   const foodButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.food-item'));
   const quickFeedBtn = $('kitchenFeedBtn') as HTMLButtonElement | null;
+  const kitchenOtter = document.querySelector<HTMLElement>('#kitchenPage .kitchen-otter');
+  const kitchenOtterImg = kitchenOtter?.querySelector<HTMLImageElement>('.otter-img') ?? null;
 
   if (!dropZone || !foodButtons.length) {
     return;
   }
 
+  const dropTargets = Array.from(
+    new Set<HTMLElement>(
+      [dropZone, kitchenOtter, kitchenOtterImg].filter((el): el is HTMLElement => Boolean(el))
+    )
+  );
+
   let currentFood: string | null = null;
   let suppressNextClick = false;
   let touchDrag: { button: HTMLButtonElement; pointerId: number; foodKey: string | null } | null = null;
+
+  const toggleDropHover = (active: boolean): void => {
+    dropTargets.forEach(target => {
+      target.classList.toggle('drag-over', active);
+    });
+  };
 
   const setActiveFood = (button: HTMLButtonElement | null): void => {
     foodButtons.forEach(btn => {
@@ -780,7 +794,7 @@ function initKitchenScene(): void {
   };
 
   const resetDragState = (): void => {
-    dropZone.classList.remove('drag-over');
+    toggleDropHover(false);
     currentFood = null;
     setActiveFood(null);
     foodButtons.forEach(btn => btn.classList.remove('dragging'));
@@ -789,9 +803,11 @@ function initKitchenScene(): void {
   const isTouchPointer = (event: PointerEvent): boolean =>
     event.pointerType === 'touch' || event.pointerType === 'pen';
 
-  const isPointInsideDropZone = (x: number, y: number): boolean => {
-    const rect = dropZone.getBoundingClientRect();
-    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  const isPointInsideDropTargets = (x: number, y: number): boolean => {
+    return dropTargets.some(target => {
+      const rect = target.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    });
   };
 
   const finishTouchDrag = (event: PointerEvent, drop: boolean): void => {
@@ -816,21 +832,27 @@ function initKitchenScene(): void {
     resetDragState();
   };
 
-  dropZone.addEventListener('dragover', event => {
-    event.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
+  const bindDropTarget = (element: HTMLElement): void => {
+    element.addEventListener('dragenter', event => {
+      event.preventDefault();
+      toggleDropHover(true);
+    });
+    element.addEventListener('dragover', event => {
+      event.preventDefault();
+      toggleDropHover(true);
+    });
+    element.addEventListener('dragleave', () => {
+      toggleDropHover(false);
+    });
+    element.addEventListener('drop', event => {
+      event.preventDefault();
+      const transferred = event.dataTransfer?.getData('text/plain') || currentFood;
+      feedWithSnack(transferred ?? null);
+      resetDragState();
+    });
+  };
 
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('drag-over');
-  });
-
-  dropZone.addEventListener('drop', event => {
-    event.preventDefault();
-    const transferred = event.dataTransfer?.getData('text/plain') || currentFood;
-    feedWithSnack(transferred ?? null);
-    resetDragState();
-  });
+  dropTargets.forEach(target => bindDropTarget(target));
 
   foodButtons.forEach(button => {
     button.addEventListener('pointerdown', event => {
@@ -850,7 +872,7 @@ function initKitchenScene(): void {
       } catch (error) {
         void error;
       }
-      dropZone.classList.toggle('drag-over', isPointInsideDropZone(event.clientX, event.clientY));
+      toggleDropHover(isPointInsideDropTargets(event.clientX, event.clientY));
       event.preventDefault();
     });
 
@@ -858,14 +880,14 @@ function initKitchenScene(): void {
       if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
         return;
       }
-      dropZone.classList.toggle('drag-over', isPointInsideDropZone(event.clientX, event.clientY));
+      toggleDropHover(isPointInsideDropTargets(event.clientX, event.clientY));
     });
 
     button.addEventListener('pointerup', event => {
       if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
         return;
       }
-      const shouldDrop = isPointInsideDropZone(event.clientX, event.clientY);
+      const shouldDrop = isPointInsideDropTargets(event.clientX, event.clientY);
       finishTouchDrag(event, shouldDrop);
     });
 
