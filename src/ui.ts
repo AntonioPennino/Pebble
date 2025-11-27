@@ -310,12 +310,16 @@ function setSettingsOverlayVisibility(visible: boolean): void {
   settingsModalOpen = visible;
   toggleOverlayVisibility(overlay, visible);
   overlay?.classList.toggle('active', visible);
+  if (overlay) {
+    overlay.style.display = visible ? 'flex' : 'none';
+  }
   if (settingsBtn) {
     settingsBtn.setAttribute('aria-expanded', String(visible));
   }
   if (visible) {
     window.setTimeout(() => closeBtn?.focus(), 0);
   }
+  document.body.classList.toggle('settings-open', visible);
   recomputeOverlayState();
 }
 

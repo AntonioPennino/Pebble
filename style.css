@@ -58,6 +58,10 @@ body.gift-modal-open {
   overflow: hidden;
 }
 
+body.settings-open {
+  overflow: hidden;
+}
+
 body.theme-comfort {
   color-scheme: dark;
   --bg-gradient-start: #0A1B20;
