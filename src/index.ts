@@ -1,6 +1,7 @@
 import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
 import { initUI, prepareUpdatePrompt, showGiftModal } from './ui.js';
 import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState, type PebbleGiftEventDetail } from './gameStateManager.js';
+import { audioManager } from './audio.js';
 
 function setupServiceWorker(): void {
   if (!('serviceWorker' in navigator)) {
@@ -102,6 +103,18 @@ function bootstrap(): void {
   });
   initUI();
   setupServiceWorker();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      audioManager.suspend();
+    } else {
+      void audioManager.resume();
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    audioManager.suspend();
+  });
 
   window.setInterval(() => {
     advanceTick();
