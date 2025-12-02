@@ -8,8 +8,6 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "serve": "http-server . -p 4173",
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
     "lint": "tsc --noEmit"
   },
   "repository": {
@@ -33,7 +31,6 @@
     "@supabase/supabase-js": "^2.45.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
     "http-server": "^14.1.1",
     "typescript": "^5.9.3"
   }
