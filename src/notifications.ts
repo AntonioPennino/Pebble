@@ -1,8 +1,8 @@
 import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPushConfigured } from './config.js';
 import { getSupabaseClient } from './cloudSync.js';
-import { getState, markNotificationPrompted, markNotificationSent, updateNotificationSettings } from './state.js';
-import { getGameStateInstance } from './bootstrap.js';
+import { getGameStateInstance, getSettingsStateInstance } from './bootstrap.js';
 import { recordEvent } from './core/analytics.js';
+import { NotificationSettings } from './types.js';
 
 const LOW_STAT_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', { title: string; body: string }> = {
   hunger: {
@@ -31,28 +31,31 @@ export function notificationsSupported(): boolean {
 
 export async function enableNotifications(): Promise<boolean> {
   if (!notificationsSupported()) {
-    updateNotificationSettings(settings => {
-      settings.permission = 'denied';
-      settings.enabled = false;
+    getSettingsStateInstance().updateNotificationSettings({
+      permission: 'denied',
+      enabled: false
     });
     return false;
   }
 
   const currentPermission = Notification.permission;
   if (currentPermission === 'granted') {
-    updateNotificationSettings(settings => {
-      settings.permission = 'granted';
-      settings.enabled = true;
+    getSettingsStateInstance().updateNotificationSettings({
+      permission: 'granted',
+      enabled: true
     });
     await ensurePushSubscription();
     return true;
   }
 
-  markNotificationPrompted();
+  // markNotificationPrompted(); // Was in state.ts. We can track this in SettingsState if needed.
+  // For now, let's assume we just update lastPromptAt in SettingsState.
+  getSettingsStateInstance().updateNotificationSettings({ lastPromptAt: Date.now() });
+
   const permission = await Notification.requestPermission();
-  updateNotificationSettings(settings => {
-    settings.permission = permission;
-    settings.enabled = permission === 'granted';
+  getSettingsStateInstance().updateNotificationSettings({
+    permission: permission,
+    enabled: permission === 'granted'
   });
 
   if (permission === 'granted') {
@@ -66,9 +69,9 @@ export async function enableNotifications(): Promise<boolean> {
 }
 
 export async function disableNotifications(): Promise<void> {
-  updateNotificationSettings(settings => {
-    settings.enabled = false;
-    settings.subscriptionId = null;
+  getSettingsStateInstance().updateNotificationSettings({
+    enabled: false,
+    subscriptionId: null
   });
 
   if (!notificationsSupported()) {
@@ -88,12 +91,12 @@ export async function disableNotifications(): Promise<void> {
 }
 
 export async function notifyLowStat(stat: 'hunger' | 'happy' | 'clean' | 'energy'): Promise<void> {
-  const state = getState();
-  if (!state.notifications.enabled || state.notifications.permission !== 'granted') {
+  const settings = getSettingsStateInstance().getSettings();
+  if (!settings.notifications.enabled || settings.notifications.permission !== 'granted') {
     return;
   }
 
-  const lastSent = state.notifications.lastSent[stat] ?? 0;
+  const lastSent = settings.notifications.lastSent[stat] ?? 0;
   if (Date.now() - lastSent < REMINDER_COOLDOWN_MS) {
     return;
   }
@@ -117,7 +120,10 @@ export async function notifyLowStat(stat: 'hunger' | 'happy' | 'clean' | 'energy
     console.warn('Impossibile mostrare la notifica locale', error);
   }
 
-  markNotificationSent(stat);
+  // markNotificationSent(stat);
+  const lastSentUpdate = { ...settings.notifications.lastSent, [stat]: Date.now() };
+  getSettingsStateInstance().updateNotificationSettings({ lastSent: lastSentUpdate });
+
   void triggerRemoteReminder(stat).catch(() => undefined);
 }
 
@@ -147,9 +153,7 @@ async function ensurePushSubscription(): Promise<void> {
     return;
   }
 
-  updateNotificationSettings(settings => {
-    settings.enabled = true;
-  }, { silent: true });
+  getSettingsStateInstance().updateNotificationSettings({ enabled: true });
 
   await persistSubscription(subscription);
 }
@@ -169,10 +173,10 @@ async function persistSubscription(subscription: PushSubscription): Promise<void
   }
 
   const id = await hashEndpoint(json.endpoint);
-  const currentState = getState();
+  const settings = getSettingsStateInstance().getSettings();
   const payload = {
     id,
-    client_id: currentState.notifications.clientId,
+    client_id: settings.notifications.clientId,
     record_id: resolveSyncRecordId(),
     endpoint: json.endpoint,
     subscription: json,
@@ -181,9 +185,7 @@ async function persistSubscription(subscription: PushSubscription): Promise<void
 
   try {
     await supabase.from('otter_push_subscriptions').upsert(payload, { onConflict: 'id' });
-    updateNotificationSettings(settings => {
-      settings.subscriptionId = id;
-    }, { silent: true });
+    getSettingsStateInstance().updateNotificationSettings({ subscriptionId: id });
   } catch (error) {
     console.warn('Impossibile salvare la sottoscrizione su Supabase', error);
   }
@@ -204,7 +206,7 @@ async function removeSubscriptionFromSupabase(subscription: PushSubscription): P
       .from('otter_push_subscriptions')
       .delete()
       .eq('id', id)
-      .eq('client_id', getState().notifications.clientId);
+      .eq('client_id', getSettingsStateInstance().getSettings().notifications.clientId);
   } catch (error) {
     console.warn('Impossibile eliminare la sottoscrizione da Supabase', error);
   }
@@ -219,15 +221,16 @@ async function triggerRemoteReminder(stat: 'hunger' | 'happy' | 'clean' | 'energ
   if (!supabase) {
     return;
   }
-  const state = getState();
+  const settings = getSettingsStateInstance().getSettings();
+  const gameState = getGameStateInstance();
   try {
     await supabase.functions.invoke(reminderFunction, {
       body: {
         stat,
-        petName: state.petName,
+        petName: gameState.getPetName(),
         recordId: resolveSyncRecordId(),
-        clientId: state.notifications.clientId,
-        subscriptionId: state.notifications.subscriptionId
+        clientId: settings.notifications.clientId,
+        subscriptionId: settings.notifications.subscriptionId
       }
     });
   } catch (error) {

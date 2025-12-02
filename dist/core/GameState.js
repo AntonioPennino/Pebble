@@ -5,7 +5,9 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const DEFAULT_STATS = {
     hunger: 80,
     happiness: 85,
-    energy: 75
+    energy: 75,
+    clean: 80,
+    coins: 0
 };
 export class GameState {
     constructor(storageService, cloudService, gameRulesService) {
@@ -15,20 +17,46 @@ export class GameState {
         this.hadStoredStateOnBoot = false;
         this.hadStoredPlayerId = false;
         this.attemptedRemoteRecovery = false;
+        this.listeners = [];
         const stored = this.readFromStorage();
         this.hadStoredStateOnBoot = stored.hadData;
         this.stats = stored.state.stats;
         this.lastLoginDate = stored.state.lastLoginDate;
         this.inventory = stored.state.inventory;
+        this.petName = stored.state.petName;
+        this.equipped = stored.state.equipped;
+        this.metrics = stored.state.metrics;
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
-        this.dispatchPlayerIdChange();
+    }
+    subscribe(listener) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+    notifyListeners() {
+        this.listeners.forEach(l => l());
     }
     getStats() {
         return this.cloneStats(this.stats);
     }
     getInventory() {
         return [...this.inventory];
+    }
+    getPetName() {
+        return this.petName;
+    }
+    getEquipped() {
+        return { ...this.equipped };
+    }
+    getMetrics() {
+        return { ...this.metrics };
+    }
+    incrementMetric(metric, amount = 1) {
+        this.metrics[metric] += amount;
+        this.writeToStorage();
+        this.notifyListeners();
     }
     getPlayerId() {
         return this.playerId;
@@ -51,6 +79,20 @@ export class GameState {
         this.inventory = sanitized;
         this.writeToStorage();
         this.notifyInventoryChange();
+        this.notifyListeners();
+    }
+    setPetName(name) {
+        const sanitized = name.trim().slice(0, 24);
+        if (sanitized !== this.petName) {
+            this.petName = sanitized || 'Pebble';
+            this.writeToStorage();
+            this.notifyListeners();
+        }
+    }
+    setEquipped(equipped) {
+        this.equipped = { ...this.equipped, ...equipped };
+        this.writeToStorage();
+        this.notifyListeners();
     }
     getLastLoginDate() {
         return this.lastLoginDate;
@@ -58,6 +100,7 @@ export class GameState {
     setStats(partial) {
         this.stats = this.mergeStats(this.stats, partial);
         this.writeToStorage();
+        this.notifyListeners();
     }
     calculateOfflineProgress(now = Date.now()) {
         const previousLogin = this.lastLoginDate;
@@ -83,6 +126,7 @@ export class GameState {
         }
         this.lastLoginDate = now;
         this.writeToStorage();
+        this.notifyListeners();
         return {
             hoursAway,
             statsBefore,
@@ -91,10 +135,15 @@ export class GameState {
         };
     }
     async syncWithSupabase() {
+        // Note: We currently only sync stats and inventory. PetName and Equipped are local-only for now,
+        // or we need to update the Supabase schema. For now, let's keep them local or assume they are part of 'stats' if we change the schema.
+        // The current SupabaseCloudService expects CoreStats.
+        // TODO: Update Supabase schema to include petName and equipped if needed.
         const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory);
         if (remote) {
             this.mergeRemoteState(remote);
             this.writeToStorage();
+            this.notifyListeners();
         }
     }
     mergeRemoteState(remote) {
@@ -124,7 +173,9 @@ export class GameState {
         return {
             hunger: this.clampStat(partial.hunger ?? current.hunger),
             happiness: this.clampStat(partial.happiness ?? current.happiness),
-            energy: this.clampStat(partial.energy ?? current.energy)
+            energy: this.clampStat(partial.energy ?? current.energy),
+            clean: this.clampStat(partial.clean ?? current.clean),
+            coins: Math.max(0, partial.coins ?? current.coins)
         };
     }
     sanitizeStats(candidate) {
@@ -134,7 +185,9 @@ export class GameState {
         return {
             hunger: this.clampStat(typeof candidate.hunger === 'number' ? candidate.hunger : DEFAULT_STATS.hunger),
             happiness: this.clampStat(typeof candidate.happiness === 'number' ? candidate.happiness : DEFAULT_STATS.happiness),
-            energy: this.clampStat(typeof candidate.energy === 'number' ? candidate.energy : DEFAULT_STATS.energy)
+            energy: this.clampStat(typeof candidate.energy === 'number' ? candidate.energy : DEFAULT_STATS.energy),
+            clean: this.clampStat(typeof candidate.clean === 'number' ? candidate.clean : DEFAULT_STATS.clean),
+            coins: Math.max(0, typeof candidate.coins === 'number' ? candidate.coins : DEFAULT_STATS.coins)
         };
     }
     sanitizeInventory(candidate) {
@@ -156,6 +209,7 @@ export class GameState {
         this.inventory = remoteInventory;
         this.writeToStorage();
         this.notifyInventoryChange();
+        this.notifyListeners();
     }
     applyPlayerId(newId, options = {}) {
         const sanitized = newId.trim();
@@ -200,7 +254,10 @@ export class GameState {
                 ? parsed.lastLoginDate
                 : Date.now();
             const inventory = this.sanitizeInventory(parsed.inventory);
-            return { state: { stats, lastLoginDate, inventory }, hadData: true };
+            const petName = typeof parsed.petName === 'string' ? parsed.petName : 'Pebble';
+            const equipped = parsed.equipped || { hat: false, scarf: false, sunglasses: false };
+            const metrics = parsed.metrics || { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 };
+            return { state: { stats, lastLoginDate, inventory, petName, equipped, metrics }, hadData: true };
         }
         catch (error) {
             console.warn('Impossibile leggere il GameState locale, verrà ricreato', error);
@@ -211,7 +268,10 @@ export class GameState {
         const payload = {
             stats: this.cloneStats(this.stats),
             lastLoginDate: this.lastLoginDate,
-            inventory: [...this.inventory]
+            inventory: [...this.inventory],
+            petName: this.petName,
+            equipped: { ...this.equipped },
+            metrics: { ...this.metrics }
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
@@ -234,7 +294,10 @@ export class GameState {
         return {
             stats: this.cloneStats(DEFAULT_STATS),
             lastLoginDate: Date.now(),
-            inventory: []
+            inventory: [],
+            petName: 'Pebble',
+            equipped: { hat: false, scarf: false, sunglasses: false },
+            metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 }
         };
     }
     cloneStats(stats) {

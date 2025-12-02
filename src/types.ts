@@ -67,6 +67,8 @@ export interface CoreStats {
   hunger: number;
   happiness: number;
   energy: number;
+  clean: number;
+  coins: number;
 }
 
 export interface PebbleGiftEventDetail {

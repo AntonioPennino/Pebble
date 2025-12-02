@@ -1,4 +1,4 @@
-import { CoreStats, PebbleGiftEventDetail } from '../types.js';
+import { CoreStats, PebbleGiftEventDetail, AccessoryState, GameStats } from '../types.js';
 import { IStorageService } from './interfaces/IStorageService.js';
 import { ICloudService } from './interfaces/ICloudService.js';
 import { IGameRulesService } from './interfaces/IGameRulesService.js';
@@ -11,23 +11,32 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const DEFAULT_STATS: CoreStats = {
     hunger: 80,
     happiness: 85,
-    energy: 75
+    energy: 75,
+    clean: 80,
+    coins: 0
 };
 
 interface StoredGameState {
     stats: CoreStats;
     lastLoginDate: number;
     inventory: string[];
+    petName: string;
+    equipped: AccessoryState;
+    metrics: GameStats;
 }
 
 export class GameState {
     private stats: CoreStats;
     private lastLoginDate: number;
     private inventory: string[];
+    private petName: string;
+    private equipped: AccessoryState;
+    private metrics: GameStats;
     private playerId: string;
     private hadStoredStateOnBoot = false;
     private hadStoredPlayerId = false;
     private attemptedRemoteRecovery = false;
+    private listeners: Array<() => void> = [];
 
     constructor(
         private storageService: IStorageService,
@@ -39,9 +48,22 @@ export class GameState {
         this.stats = stored.state.stats;
         this.lastLoginDate = stored.state.lastLoginDate;
         this.inventory = stored.state.inventory;
+        this.petName = stored.state.petName;
+        this.equipped = stored.state.equipped;
+        this.metrics = stored.state.metrics;
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
-        this.dispatchPlayerIdChange();
+    }
+
+    public subscribe(listener: () => void): () => void {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    private notifyListeners(): void {
+        this.listeners.forEach(l => l());
     }
 
     public getStats(): CoreStats {
@@ -50,6 +72,24 @@ export class GameState {
 
     public getInventory(): string[] {
         return [...this.inventory];
+    }
+
+    public getPetName(): string {
+        return this.petName;
+    }
+
+    public getEquipped(): AccessoryState {
+        return { ...this.equipped };
+    }
+
+    public getMetrics(): GameStats {
+        return { ...this.metrics };
+    }
+
+    public incrementMetric(metric: keyof GameStats, amount = 1): void {
+        this.metrics[metric] += amount;
+        this.writeToStorage();
+        this.notifyListeners();
     }
 
     public getPlayerId(): string {
@@ -75,6 +115,22 @@ export class GameState {
         this.inventory = sanitized;
         this.writeToStorage();
         this.notifyInventoryChange();
+        this.notifyListeners();
+    }
+
+    public setPetName(name: string): void {
+        const sanitized = name.trim().slice(0, 24);
+        if (sanitized !== this.petName) {
+            this.petName = sanitized || 'Pebble';
+            this.writeToStorage();
+            this.notifyListeners();
+        }
+    }
+
+    public setEquipped(equipped: Partial<AccessoryState>): void {
+        this.equipped = { ...this.equipped, ...equipped };
+        this.writeToStorage();
+        this.notifyListeners();
     }
 
     public getLastLoginDate(): number {
@@ -84,6 +140,7 @@ export class GameState {
     public setStats(partial: Partial<CoreStats>): void {
         this.stats = this.mergeStats(this.stats, partial);
         this.writeToStorage();
+        this.notifyListeners();
     }
 
     public calculateOfflineProgress(now: number = Date.now()): { hoursAway: number; statsBefore: CoreStats; statsAfter: CoreStats; gift?: string } | null {
@@ -115,6 +172,7 @@ export class GameState {
 
         this.lastLoginDate = now;
         this.writeToStorage();
+        this.notifyListeners();
 
         return {
             hoursAway,
@@ -125,10 +183,15 @@ export class GameState {
     }
 
     public async syncWithSupabase(): Promise<void> {
+        // Note: We currently only sync stats and inventory. PetName and Equipped are local-only for now,
+        // or we need to update the Supabase schema. For now, let's keep them local or assume they are part of 'stats' if we change the schema.
+        // The current SupabaseCloudService expects CoreStats.
+        // TODO: Update Supabase schema to include petName and equipped if needed.
         const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory);
         if (remote) {
             this.mergeRemoteState(remote);
             this.writeToStorage();
+            this.notifyListeners();
         }
     }
 
@@ -164,7 +227,9 @@ export class GameState {
         return {
             hunger: this.clampStat(partial.hunger ?? current.hunger),
             happiness: this.clampStat(partial.happiness ?? current.happiness),
-            energy: this.clampStat(partial.energy ?? current.energy)
+            energy: this.clampStat(partial.energy ?? current.energy),
+            clean: this.clampStat(partial.clean ?? current.clean),
+            coins: Math.max(0, partial.coins ?? current.coins)
         };
     }
 
@@ -175,7 +240,9 @@ export class GameState {
         return {
             hunger: this.clampStat(typeof candidate.hunger === 'number' ? candidate.hunger : DEFAULT_STATS.hunger),
             happiness: this.clampStat(typeof candidate.happiness === 'number' ? candidate.happiness : DEFAULT_STATS.happiness),
-            energy: this.clampStat(typeof candidate.energy === 'number' ? candidate.energy : DEFAULT_STATS.energy)
+            energy: this.clampStat(typeof candidate.energy === 'number' ? candidate.energy : DEFAULT_STATS.energy),
+            clean: this.clampStat(typeof candidate.clean === 'number' ? candidate.clean : DEFAULT_STATS.clean),
+            coins: Math.max(0, typeof candidate.coins === 'number' ? candidate.coins : DEFAULT_STATS.coins)
         };
     }
 
@@ -202,6 +269,7 @@ export class GameState {
 
         this.writeToStorage();
         this.notifyInventoryChange();
+        this.notifyListeners();
     }
 
     private applyPlayerId(newId: string, options: { forceNotify?: boolean } = {}): void {
@@ -250,7 +318,11 @@ export class GameState {
                 ? parsed.lastLoginDate
                 : Date.now();
             const inventory = this.sanitizeInventory(parsed.inventory);
-            return { state: { stats, lastLoginDate, inventory }, hadData: true };
+            const petName = typeof parsed.petName === 'string' ? parsed.petName : 'Pebble';
+            const equipped = parsed.equipped || { hat: false, scarf: false, sunglasses: false };
+            const metrics = parsed.metrics || { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 };
+
+            return { state: { stats, lastLoginDate, inventory, petName, equipped, metrics }, hadData: true };
         } catch (error) {
             console.warn('Impossibile leggere il GameState locale, verrà ricreato', error);
             return { state: this.createDefaultState(), hadData: false };
@@ -261,7 +333,10 @@ export class GameState {
         const payload: StoredGameState = {
             stats: this.cloneStats(this.stats),
             lastLoginDate: this.lastLoginDate,
-            inventory: [...this.inventory]
+            inventory: [...this.inventory],
+            petName: this.petName,
+            equipped: { ...this.equipped },
+            metrics: { ...this.metrics }
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
@@ -287,7 +362,10 @@ export class GameState {
         return {
             stats: this.cloneStats(DEFAULT_STATS),
             lastLoginDate: Date.now(),
-            inventory: []
+            inventory: [],
+            petName: 'Pebble',
+            equipped: { hat: false, scarf: false, sunglasses: false },
+            metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 }
         };
     }
 

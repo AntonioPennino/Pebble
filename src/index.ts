@@ -1,6 +1,5 @@
-import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
 import { UIManager } from './ui/UIManager.js';
-import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState } from './bootstrap.js';
+import { calculateOfflineProgress, getGameStateInstance, getGameServiceInstance, syncWithSupabase } from './bootstrap.js';
 import { PebbleGiftEventDetail } from './types.js';
 import { audioManager } from './core/audio.js';
 
@@ -70,8 +69,9 @@ function promptForUpdate(worker: ServiceWorker): void {
 }
 
 function bootstrap(): void {
-  loadState();
-  void ensurePersistentStorage();
+  // ensurePersistentStorage(); // Was in state.ts. LocalStorageService handles this implicitly or we can add it.
+  // For now, assume browser handles it or add explicit check if needed.
+
   const gameState = getGameStateInstance();
 
   window.addEventListener('pebble-gift-found', event => {
@@ -80,7 +80,7 @@ function bootstrap(): void {
     uiManager.showGiftModal(item);
   });
 
-  const offlineProgress = calculateCoreOfflineProgress();
+  const offlineProgress = calculateOfflineProgress();
   if (offlineProgress) {
     const hoursText = offlineProgress.hoursAway.toFixed(2);
     console.info(`[Pebble] Sei stato via per ${hoursText} ore.`);
@@ -89,9 +89,9 @@ function bootstrap(): void {
     }
   }
 
-  void syncCoreState();
+  void syncWithSupabase();
+
   // Diagnostic: log resolved config values to help debug cloud sync setup
-  // Diagnostic: try to read runtime config with a dynamic import
   void import('./config.js').then(cfg => {
     try {
       const supabaseUrl = typeof cfg.getSupabaseUrl === 'function' ? cfg.getSupabaseUrl() : '';
@@ -120,12 +120,32 @@ function bootstrap(): void {
     audioManager.suspend();
   });
 
+  // Game Loop / Tick
   window.setInterval(() => {
-    advanceTick();
-    syncManagerWithLegacyCoreStats();
+    // advanceTick(); // Was in state.ts. Logic needs to be moved to GameService or GameState.
+    // GameState.calculateOfflineProgress handles decay.
+    // We need a 'tick' method for active play decay?
+    // state.ts had 'advanceTick' which decayed stats every 5 seconds.
+
+    // Let's implement decay in GameService or GameState.
+    // For now, let's just use calculateOfflineProgress with current time?
+    // No, offline progress is for large gaps.
+    // We need a simple decay.
+
+    const stats = gameState.getStats();
+    gameState.setStats({
+      hunger: Math.max(0, stats.hunger - 0.5),
+      happiness: Math.max(0, stats.happiness - 0.5),
+      energy: Math.max(0, stats.energy - 0.2),
+      clean: Math.max(0, stats.clean - 0.3)
+    });
+
   }, 5000);
-  window.setInterval(() => saveState(), 60000);
-  window.addEventListener('beforeunload', () => saveState());
+
+  // Auto-save is handled by GameState on every change, but we can force sync occasionally?
+  // GameState writes to storage on every setStats.
+  // We might want to sync with cloud periodically.
+  window.setInterval(() => void syncWithSupabase(), 60000);
 }
 
 if (document.readyState === 'loading') {

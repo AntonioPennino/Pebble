@@ -4,7 +4,9 @@ import { CoreStats } from '../../types.js';
 const DECAY_PER_HOUR: CoreStats = {
     hunger: 1.5,
     happiness: 0.9,
-    energy: 1.2
+    energy: 1.2,
+    clean: 0.8,
+    coins: 0 // Coins don't decay
 };
 
 const HOURS_TO_GIFT = 4;
@@ -30,7 +32,9 @@ export class StandardGameRulesService implements IGameRulesService {
         return {
             hunger: apply(stats.hunger, DECAY_PER_HOUR.hunger),
             happiness: apply(stats.happiness, DECAY_PER_HOUR.happiness),
-            energy: apply(stats.energy, DECAY_PER_HOUR.energy)
+            energy: apply(stats.energy, DECAY_PER_HOUR.energy),
+            clean: apply(stats.clean, DECAY_PER_HOUR.clean),
+            coins: stats.coins // Coins persist
         };
     }
 
