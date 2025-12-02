@@ -1,4 +1,4 @@
-import { $ } from '../utils';
+import { $ } from '../utils.js';
 const OTTER_ASSET_BASE = 'src/assets/otter';
 const OUTFIT_VARIANTS = [
     { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },

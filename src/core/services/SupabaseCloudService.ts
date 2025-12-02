@@ -1,6 +1,6 @@
-import { ICloudService, CloudRecoveryResult, SupabaseGameStateRow } from '../interfaces/ICloudService';
-import { getSupabaseClient } from '../../cloudSync';
-import { CoreStats } from '../../types';
+import { ICloudService, CloudRecoveryResult, SupabaseGameStateRow } from '../interfaces/ICloudService.js';
+import { getSupabaseClient } from '../../cloudSync.js';
+import { CoreStats } from '../../types.js';
 
 export class SupabaseCloudService implements ICloudService {
     private supabaseUnavailable = false;

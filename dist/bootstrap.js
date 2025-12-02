@@ -1,7 +1,7 @@
-import { GameState } from './core/GameState';
-import { LocalStorageService } from './core/services/LocalStorageService';
-import { SupabaseCloudService } from './core/services/SupabaseCloudService';
-import { StandardGameRulesService } from './core/services/StandardGameRulesService';
+import { GameState } from './core/GameState.js';
+import { LocalStorageService } from './core/services/LocalStorageService.js';
+import { SupabaseCloudService } from './core/services/SupabaseCloudService.js';
+import { StandardGameRulesService } from './core/services/StandardGameRulesService.js';
 let gameStateInstance = null;
 export function initializeGame() {
     if (gameStateInstance) {

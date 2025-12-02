@@ -89,8 +89,21 @@ function bootstrap() {
     }).catch(err => {
         console.info('[Pebble] runtime config: import error', err);
     });
-    uiManager.init();
+    console.log('[Pebble] Starting UIManager init...');
+    try {
+        uiManager.init();
+        console.log('[Pebble] UIManager init completed.');
+    }
+    catch (error) {
+        console.error('[Pebble] UIManager init failed:', error);
+    }
     setupServiceWorker();
+    window.addEventListener('error', (event) => {
+        console.error('[Pebble] Global error:', event.error);
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error('[Pebble] Unhandled rejection:', event.reason);
+    });
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             audioManager.suspend();

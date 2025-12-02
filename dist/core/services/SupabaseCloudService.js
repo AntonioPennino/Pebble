@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '../../cloudSync';
+import { getSupabaseClient } from '../../cloudSync.js';
 export class SupabaseCloudService {
     constructor() {
         this.supabaseUnavailable = false;

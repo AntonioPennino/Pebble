@@ -1,4 +1,4 @@
-import { $ } from '../utils';
+import { $ } from '../utils.js';
 export class HUD {
     update(state, coreStats) {
         this.setBar($('hungerBar'), coreStats.hunger);

@@ -85,7 +85,6 @@ export class UIManager {
         const scoreEl = $('miniScore');
         const closeButtonEl = $('closeMini');
 
-        console.log('UIManager: Initializing MiniGame elements', { overlayEl, areaEl, scoreEl, closeButtonEl });
         if (overlayEl && areaEl && scoreEl && closeButtonEl) {
             initMiniGame({
                 overlay: overlayEl,
@@ -99,9 +98,7 @@ export class UIManager {
             });
 
             const playBtn = $('playBtn');
-            console.log('UIManager: playBtn found?', playBtn);
             playBtn?.addEventListener('click', () => {
-                console.log('UIManager: playBtn clicked');
                 openMiniGame();
             });
         }

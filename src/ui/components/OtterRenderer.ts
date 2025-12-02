@@ -1,6 +1,6 @@
-import { AccessoryState, Mood, OutfitKey } from '../../types';
-import { $ } from '../utils';
-import { audioManager, resumeAudioContext } from '../../audio';
+import { AccessoryState, Mood, OutfitKey } from '../../types.js';
+import { $ } from '../utils.js';
+import { audioManager, resumeAudioContext } from '../../audio.js';
 
 const OTTER_ASSET_BASE = 'src/assets/otter';
 

@@ -1,5 +1,5 @@
-import { $, toggleOverlayVisibility } from '../utils';
-import { recordEvent } from '../../analytics';
+import { $, toggleOverlayVisibility } from '../utils.js';
+import { recordEvent } from '../../analytics.js';
 export class ModalManager {
     constructor(inventoryView) {
         this.inventoryView = inventoryView;

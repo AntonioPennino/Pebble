@@ -1,4 +1,4 @@
-import { $ } from '../utils';
+import { $ } from '../utils.js';
 
 export class InventoryView {
     public render(items: string[]): void {

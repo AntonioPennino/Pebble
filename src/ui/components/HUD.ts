@@ -1,5 +1,5 @@
-import { GameState } from '../../types';
-import { $ } from '../utils';
+import { GameState } from '../../types.js';
+import { $ } from '../utils.js';
 
 export class HUD {
     public update(state: GameState, coreStats: { hunger: number; happiness: number; energy: number }): void {

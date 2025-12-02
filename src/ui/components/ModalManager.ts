@@ -1,7 +1,7 @@
-import { $, toggleOverlayVisibility } from '../utils';
-import { InventoryView } from './InventoryView';
-import { recordEvent } from '../../analytics';
-import { GameState } from '../../types';
+import { $, toggleOverlayVisibility } from '../utils.js';
+import { InventoryView } from './InventoryView.js';
+import { recordEvent } from '../../analytics.js';
+import { GameState } from '../../types.js';
 
 export class ModalManager {
     private giftModalOpen = false;

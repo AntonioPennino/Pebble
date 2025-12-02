@@ -1,5 +1,5 @@
-import { $ } from '../utils';
-import { notificationsSupported } from '../../notifications';
+import { $ } from '../utils.js';
+import { notificationsSupported } from '../../notifications.js';
 const STAT_ICONS = {
     hunger: '🍗',
     happy: '🎉',

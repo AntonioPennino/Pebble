@@ -1,7 +1,7 @@
-import { CoreStats, PebbleGiftEventDetail } from '../types';
-import { IStorageService } from './interfaces/IStorageService';
-import { ICloudService } from './interfaces/ICloudService';
-import { IGameRulesService } from './interfaces/IGameRulesService';
+import { CoreStats, PebbleGiftEventDetail } from '../types.js';
+import { IStorageService } from './interfaces/IStorageService.js';
+import { ICloudService } from './interfaces/ICloudService.js';
+import { IGameRulesService } from './interfaces/IGameRulesService.js';
 
 const LOCAL_STORAGE_KEY = 'pebble:game-state:v1';
 const PLAYER_ID_STORAGE_KEY = 'pebble:player-id:v1';

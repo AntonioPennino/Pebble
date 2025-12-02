@@ -1,4 +1,4 @@
-import { IStorageService } from '../interfaces/IStorageService';
+import { IStorageService } from '../interfaces/IStorageService.js';
 
 export class LocalStorageService implements IStorageService {
     getItem(key: string): string | null {
