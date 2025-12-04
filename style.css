@@ -340,46 +340,32 @@ body.zen-mode .coins-display {
   display: flex;
   flex-direction: column;
   animation: fadeInPage 0.4s ease;
+  overflow-y: auto; /* Allow scrolling if content is too tall */
+  padding-bottom: 8px; /* Space for nav */
 }
 
-.journal-page.hidden {
-  display: none;
-}
-
-@keyframes fadeInPage {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.journal-page h2 {
-  font-family: 'Nunito', sans-serif;
-  font-weight: 800;
-  color: #3E2723;
-  border-bottom: 2px solid #EFEBE9;
-  padding-bottom: 8px;
-  margin-bottom: 24px;
-}
+/* ... */
 
 /* Polaroid Style */
 .polaroid {
   background: white;
-  padding: 12px 12px 32px 12px;
+  padding: 8px 8px 24px 8px; /* Reduced padding */
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transform: rotate(-2deg);
   text-align: center;
   margin: 0 auto;
-  max-width: 200px;
+  max-width: 160px; /* Reduced max-width */
 }
 
 .polaroid-img {
   width: 100%;
   aspect-ratio: 1;
   background: #eee;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  font-size: 2.5rem; /* Reduced font size */
   color: #ccc;
 }
 
