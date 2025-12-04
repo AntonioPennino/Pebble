@@ -298,10 +298,80 @@ export class UIManager {
         playBtn?.addEventListener('click', () => {
             openMiniGame();
         });
-        // Stone Polishing
+        // Stone Polishing (Now Stone Stacking)
         const stoneBtn = document.getElementById('stonePolishingStartBtn');
         stoneBtn?.addEventListener('click', () => {
-            this.notificationUI.showAlert('Rituale del sasso in arrivo...', 'info');
+            const overlay = $('stoneStackingOverlay');
+            if (overlay)
+                overlay.classList.remove('hidden');
+        });
+        this.initStoneStacking();
+    }
+    initStoneStacking() {
+        const overlay = $('stoneStackingOverlay');
+        const closeBtn = $('closeStoneStacking');
+        const dropZone = $('stoneDropZone');
+        const sourceStones = document.querySelectorAll('.draggable-stone');
+        if (!overlay || !closeBtn || !dropZone)
+            return;
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+            // Reset stack? Maybe keep it persistent? For now, reset visually but keep logic simple.
+            dropZone.innerHTML = '<div class="base-stone"></div>';
+        });
+        let stackHeight = 40; // Base stone height
+        sourceStones.forEach(stone => {
+            stone.addEventListener('dragstart', (e) => {
+                const dragEvent = e;
+                dragEvent.dataTransfer?.setData('text/plain', stone.dataset.size || 'medium');
+                dragEvent.dataTransfer?.setData('source', 'stone');
+            });
+        });
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const size = e.dataTransfer?.getData('text/plain');
+            const source = e.dataTransfer?.getData('source');
+            if (source !== 'stone' || !size)
+                return;
+            const newStone = document.createElement('div');
+            newStone.classList.add('stone', 'stacked-stone');
+            newStone.textContent = '🪨';
+            // Size logic
+            if (size === 'large') {
+                newStone.style.fontSize = '4rem';
+                newStone.style.width = '100px';
+                newStone.style.height = '60px';
+            }
+            else if (size === 'medium') {
+                newStone.style.fontSize = '3rem';
+                newStone.style.width = '80px';
+                newStone.style.height = '50px';
+            }
+            else {
+                newStone.style.fontSize = '2rem';
+                newStone.style.width = '60px';
+                newStone.style.height = '40px';
+            }
+            // Stack logic (simplified physics)
+            newStone.style.bottom = `${stackHeight}px`;
+            // Random slight offset for "organic" feel
+            const offset = (Math.random() - 0.5) * 20;
+            newStone.style.left = `calc(50% + ${offset}px)`;
+            newStone.style.transform = `translateX(-50%) rotate(${(Math.random() - 0.5) * 10}deg)`;
+            dropZone.appendChild(newStone);
+            // Update height
+            const addedHeight = size === 'large' ? 50 : size === 'medium' ? 40 : 30;
+            stackHeight += addedHeight;
+            // Feedback
+            if (navigator.vibrate)
+                navigator.vibrate(20);
+            // Win condition / Zen moment?
+            if (stackHeight > 300) {
+                this.notificationUI.showAlert('Che equilibrio perfetto...', 'info');
+            }
         });
     }
     feedWithSnack(snack) {
