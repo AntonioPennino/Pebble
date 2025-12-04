@@ -14,7 +14,7 @@ export class GameService {
         this.gameState.setStats({
             hunger: Math.min(100, stats.hunger + 20),
             happiness: Math.min(100, stats.happiness + 6),
-            coins: Math.max(0, stats.coins - 5)
+            seaGlass: Math.max(0, stats.seaGlass - 5)
         });
 
         recordEvent('azione:cibo');
@@ -41,9 +41,9 @@ export class GameService {
 
     public spendCoins(amount: number): boolean {
         const stats = this.gameState.getStats();
-        if (stats.coins >= amount) {
+        if (stats.seaGlass >= amount) {
             this.gameState.setStats({
-                coins: stats.coins - amount
+                seaGlass: stats.seaGlass - amount
             });
             recordEvent(`spesa:${amount}`);
             return true;
@@ -59,7 +59,7 @@ export class GameService {
     public rewardFishCatch(): void {
         const stats = this.gameState.getStats();
         this.gameState.setStats({
-            coins: stats.coins + 2,
+            seaGlass: stats.seaGlass + 2,
             happiness: Math.min(100, stats.happiness + 4)
         });
         this.gameState.incrementMetric('fishCaught');

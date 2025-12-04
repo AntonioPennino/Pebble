@@ -21,10 +21,6 @@
   <header>
     <div class="header-content">
       <h1 class="brand-lowercase">pebble</h1>
-      <div class="coins-display">
-        <span>🪙</span>
-        <span id="coins">0</span>
-      </div>
     </div>
   </header>
 
@@ -77,12 +73,24 @@
       </div>
     </section>
 
-    <!-- Scene 5: Mercante (Shop) -->
+    <!-- Scene 5: Mercante (The Exchange) -->
     <section id="shopPage" class="scene" data-scene="shop">
-      <h2 class="text-soft">Mercante</h2>
-      <!-- Shop content will need a horizontal scroll or grid within this scene -->
-      <div class="shop-grid" style="display: flex; gap: 16px; overflow-x: auto; max-width: 100%; padding: 16px;">
-        <!-- Items populated by JS -->
+      <div class="merchant-container">
+        <!-- The Merchant (Turtle or Beaver) -->
+        <div class="merchant-character">🐢</div> 
+        
+        <!-- The Rug (Item Display) -->
+        <div class="merchant-rug">
+          <div class="rug-item" data-item="shell_pink" data-cost="10">🐚</div>
+          <div class="rug-item" data-item="stone_smooth" data-cost="15">🪨</div>
+          <div class="rug-item" data-item="hat_straw" data-cost="50">👒</div>
+        </div>
+      </div>
+      
+      <!-- Sea Glass Display (Subtle, maybe on the rug or floating) -->
+      <div class="sea-glass-display">
+        <span class="glass-icon">💎</span>
+        <span id="seaGlassCount">0</span>
       </div>
     </section>
   </main>

@@ -7,7 +7,7 @@ export class HUD {
         this.setBar($('energyBar'), coreStats.energy);
         const coinsLabel = $('coins');
         if (coinsLabel) {
-            coinsLabel.textContent = String(state.coins);
+            coinsLabel.textContent = String(state.seaGlass);
         }
         this.updateStatsView(state);
     }
@@ -28,7 +28,7 @@ export class HUD {
     updateStatsView(state) {
         const statCoins = $('statCoins');
         if (statCoins) {
-            statCoins.textContent = String(state.coins);
+            statCoins.textContent = String(state.seaGlass);
         }
         const statGames = $('statGames');
         if (statGames) {

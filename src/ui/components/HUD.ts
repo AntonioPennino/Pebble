@@ -10,7 +10,7 @@ export class HUD {
 
         const coinsLabel = $('coins');
         if (coinsLabel) {
-            coinsLabel.textContent = String(state.coins);
+            coinsLabel.textContent = String(state.seaGlass);
         }
 
         this.updateStatsView(state);
@@ -34,7 +34,7 @@ export class HUD {
     private updateStatsView(state: GameState): void {
         const statCoins = $('statCoins');
         if (statCoins) {
-            statCoins.textContent = String(state.coins);
+            statCoins.textContent = String(state.seaGlass);
         }
         const statGames = $('statGames');
         if (statGames) {

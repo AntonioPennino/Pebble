@@ -445,3 +445,84 @@ body.zen-mode .coins-display {
   cursor: pointer;
 }
 
+
+/* The Exchange (Merchant Scene) */
+.merchant-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.merchant-character {
+  font-size: 5rem;
+  margin-bottom: -20px;
+  z-index: 2;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+  animation: float 3s ease-in-out infinite;
+}
+
+.merchant-rug {
+  background: #D7CCC8; /* Light brown rug */
+  border: 4px dashed #8D6E63;
+  border-radius: 50% 50% 10% 10%; /* Semi-circleish */
+  padding: 40px 20px 20px 20px;
+  display: flex;
+  gap: 24px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transform: perspective(500px) rotateX(20deg);
+  z-index: 1;
+}
+
+.rug-item {
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.rug-item:hover {
+  transform: scale(1.2) translateY(-10px);
+}
+
+.rug-item::after {
+  content: attr(data-cost) '💎';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: #5D4037;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.rug-item:hover::after {
+  opacity: 1;
+}
+
+.sea-glass-display {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  color: #00695C; /* Teal for sea glass */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}

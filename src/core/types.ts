@@ -34,7 +34,7 @@ export interface GameState {
   happy: number;
   clean: number;
   energy: number;
-  coins: number;
+  seaGlass: number;
   petName: string;
   petNameConfirmed: boolean;
   installPromptDismissed: boolean;
@@ -51,24 +51,14 @@ export interface GameState {
   notifications: NotificationSettings;
 }
 
-export interface BackupPayload {
-  schemaVersion: number;
-  exportedAt: string;
-  state: GameState;
-}
-
-export interface TutorialStep {
-  id: string;
-  title: string;
-  description: string;
-}
+// ...
 
 export interface CoreStats {
   hunger: number;
   happiness: number;
   energy: number;
   clean: number;
-  coins: number;
+  seaGlass: number;
 }
 
 export interface PebbleGiftEventDetail {

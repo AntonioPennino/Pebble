@@ -35,7 +35,7 @@ export class UIManager {
         this.initKitchenScene();
         this.initHygieneScene();
         this.initGamesScene();
-        this.initShop();
+        this.initMerchant();
         this.initJournal(); // New Journal Init
         // Listen for inventory changes from GameState
         window.addEventListener('pebble-inventory-changed', event => {
@@ -319,8 +319,35 @@ export class UIManager {
             recordEvent(`cibo:${snack}`);
         }
     }
-    initShop() {
-        // Shop logic...
+    initMerchant() {
+        const rugItems = document.querySelectorAll('.rug-item');
+        const seaGlassDisplay = $('seaGlassCount');
+        const updateDisplay = () => {
+            if (seaGlassDisplay) {
+                seaGlassDisplay.textContent = String(getGameStateInstance().getStats().seaGlass);
+            }
+        };
+        // Initial update
+        updateDisplay();
+        getGameStateInstance().subscribe(updateDisplay);
+        rugItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const cost = Number(item.dataset.cost);
+                const itemKey = item.dataset.item;
+                if (!cost || !itemKey)
+                    return;
+                if (getGameServiceInstance().spendCoins(cost)) { // spendCoins now uses seaGlass
+                    getGameServiceInstance().rewardItemPurchase(itemKey);
+                    this.notificationUI.showAlert(`Hai ottenuto: ${itemKey}!`, 'info');
+                    // Visual feedback?
+                    item.style.opacity = '0.5';
+                    item.style.pointerEvents = 'none';
+                }
+                else {
+                    this.notificationUI.showAlert('Non hai abbastanza Vetri di Mare.', 'warning');
+                }
+            });
+        });
     }
     initBlink() {
         window.setInterval(() => {

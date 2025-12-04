@@ -45,7 +45,7 @@ export class UIManager {
         this.initKitchenScene();
         this.initHygieneScene();
         this.initGamesScene();
-        this.initShop();
+        this.initMerchant();
         this.initJournal(); // New Journal Init
 
         // Listen for inventory changes from GameState
@@ -376,8 +376,38 @@ export class UIManager {
         }
     }
 
-    private initShop(): void {
-        // Shop logic...
+    private initMerchant(): void {
+        const rugItems = document.querySelectorAll('.rug-item');
+        const seaGlassDisplay = $('seaGlassCount');
+
+        const updateDisplay = () => {
+            if (seaGlassDisplay) {
+                seaGlassDisplay.textContent = String(getGameStateInstance().getStats().seaGlass);
+            }
+        };
+
+        // Initial update
+        updateDisplay();
+        getGameStateInstance().subscribe(updateDisplay);
+
+        rugItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const cost = Number((item as HTMLElement).dataset.cost);
+                const itemKey = (item as HTMLElement).dataset.item;
+
+                if (!cost || !itemKey) return;
+
+                if (getGameServiceInstance().spendCoins(cost)) { // spendCoins now uses seaGlass
+                    getGameServiceInstance().rewardItemPurchase(itemKey);
+                    this.notificationUI.showAlert(`Hai ottenuto: ${itemKey}!`, 'info');
+                    // Visual feedback?
+                    (item as HTMLElement).style.opacity = '0.5';
+                    (item as HTMLElement).style.pointerEvents = 'none';
+                } else {
+                    this.notificationUI.showAlert('Non hai abbastanza Vetri di Mare.', 'warning');
+                }
+            });
+        });
     }
 
     private initBlink(): void {

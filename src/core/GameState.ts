@@ -13,7 +13,7 @@ const DEFAULT_STATS: CoreStats = {
     happiness: 85,
     energy: 75,
     clean: 80,
-    coins: 0
+    seaGlass: 0
 };
 
 interface StoredGameState {
@@ -229,7 +229,7 @@ export class GameState {
             happiness: this.clampStat(partial.happiness ?? current.happiness),
             energy: this.clampStat(partial.energy ?? current.energy),
             clean: this.clampStat(partial.clean ?? current.clean),
-            coins: Math.max(0, partial.coins ?? current.coins)
+            seaGlass: Math.max(0, partial.seaGlass ?? current.seaGlass)
         };
     }
 
@@ -242,7 +242,7 @@ export class GameState {
             happiness: this.clampStat(typeof candidate.happiness === 'number' ? candidate.happiness : DEFAULT_STATS.happiness),
             energy: this.clampStat(typeof candidate.energy === 'number' ? candidate.energy : DEFAULT_STATS.energy),
             clean: this.clampStat(typeof candidate.clean === 'number' ? candidate.clean : DEFAULT_STATS.clean),
-            coins: Math.max(0, typeof candidate.coins === 'number' ? candidate.coins : DEFAULT_STATS.coins)
+            seaGlass: Math.max(0, typeof candidate.seaGlass === 'number' ? candidate.seaGlass : DEFAULT_STATS.seaGlass)
         };
     }
 

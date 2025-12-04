@@ -3,7 +3,7 @@ const DECAY_PER_HOUR = {
     happiness: 0.9,
     energy: 1.2,
     clean: 0.8,
-    coins: 0 // Coins don't decay
+    seaGlass: 0 // Sea Glass doesn't decay
 };
 const HOURS_TO_GIFT = 4;
 const GIFT_PROBABILITY = 0.6;
@@ -27,7 +27,7 @@ export class StandardGameRulesService {
             happiness: apply(stats.happiness, DECAY_PER_HOUR.happiness),
             energy: apply(stats.energy, DECAY_PER_HOUR.energy),
             clean: apply(stats.clean, DECAY_PER_HOUR.clean),
-            coins: stats.coins // Coins persist
+            seaGlass: stats.seaGlass // Sea Glass persists
         };
     }
     tryGrantGift(hoursAway, _currentInventory) {
