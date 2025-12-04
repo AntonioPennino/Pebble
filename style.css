@@ -23,11 +23,12 @@
   --bottom-nav-bg: rgba(255, 255, 255, 0.95);
   
   /* Shadows & Depth - Minimalist */
-  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --header-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
-  --bottom-nav-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
-  --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --btn-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Shadows & Depth - Minimalist */
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Very subtle */
+  --header-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+  --bottom-nav-shadow: 0 -1px 0 rgba(0, 0, 0, 0.03);
+  --modal-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   
   /* UI Metrics */
   --card-radius: 24px;
@@ -455,7 +456,8 @@ main {
 .food-item:hover,
 .food-item:focus-visible {
   transform: translateY(-2px);
-  box-shadow: 0 16px 28px rgba(92, 82, 72, 0.16);
+  transform: translateY(-2px);
+  border-color: var(--accent);
 }
 
 .food-item.dragging {
@@ -464,7 +466,8 @@ main {
 
 .food-item.active {
   transform: translateY(-2px);
-  box-shadow: 0 18px 32px rgba(92, 82, 72, 0.2);
+  transform: translateY(-2px);
+  border-color: var(--accent);
 }
 
 .kitchen-shortcuts {
@@ -583,7 +586,7 @@ main {
   width: min(85vw, 320px);
   max-width: 320px;
   aspect-ratio: 4 / 3;
-  filter: drop-shadow(0 10px 20px rgba(92, 82, 72, 0.18));
+  filter: none;
   position: relative;
 }
 
@@ -698,10 +701,16 @@ main {
 .buy-btn {
   background: var(--accent);
   color: white;
-  padding: 10px 20px;
-  border-radius: 12px;
+  padding: 12px 24px;
+  border-radius: var(--btn-radius);
   font-weight: 700;
-  transition: background 0.2s;
+  font-size: 1rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--btn-shadow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .buy-btn:hover {
@@ -922,14 +931,17 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 
 .danger-btn {
   width: 100%;
-  padding: 14px;
-  background: rgba(255, 155, 133, 0.15);
+  padding: 12px 24px;
+  background: rgba(255, 155, 133, 0.1);
   color: var(--accent-salmon);
   font-weight: 700;
-  border-radius: 12px;
+  border-radius: var(--btn-radius);
   margin-top: 10px;
-  border: 1px solid rgba(255, 155, 133, 0.4);
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border: 1px solid rgba(255, 155, 133, 0.3);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Bottom Nav */
@@ -980,18 +992,16 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   width: 32px;
   height: 32px;
   display: block;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(92, 82, 72, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
 }
 
 .nav-item.active .nav-icon {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
 }
 
 .nav-item.active .nav-icon img {
   transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(92, 82, 72, 0.18);
 }
 
 .nav-label {
@@ -1414,7 +1424,7 @@ body.theme-comfort .tutorial-overlay {
   color: #FFF9F1;
   padding: 12px 24px;
   border-radius: 50px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  box-shadow: var(--modal-shadow);
   z-index: 2000;
   font-weight: 600;
   display: flex;
@@ -1466,20 +1476,6 @@ body.theme-comfort .tutorial-overlay {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.small-btn {
-  background: var(--accent);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-.icon-btn {
-  background: none;
-  color: var(--text-muted);
-  font-size: 1.2rem;
   padding: 4px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
