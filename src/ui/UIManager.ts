@@ -140,7 +140,9 @@ export class UIManager {
             notifications: settings.notifications,
             tutorialSeen: settings.tutorialSeen,
             installPromptDismissed: settings.installPromptDismissed,
-            analyticsOptIn: settings.analyticsOptIn
+            analyticsOptIn: settings.analyticsOptIn,
+            analytics: settings.analytics,
+            stats: gameState.getMetrics()
         };
 
         this.hud.update(pseudoState, coreStats);
