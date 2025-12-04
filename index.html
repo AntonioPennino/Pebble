@@ -158,6 +158,23 @@
     </div>
   </div>
 
+  <!-- Stone Stacking Ritual Overlay -->
+  <div id="stoneStackingOverlay" class="overlay hidden">
+    <div class="ritual-container">
+      <h2 class="ritual-title">Equilibrio</h2>
+      <div id="stoneDropZone" class="stone-drop-zone">
+        <!-- Stones will be placed here -->
+        <div class="base-stone"></div>
+      </div>
+      <div id="stoneSource" class="stone-source">
+        <div class="stone draggable-stone" draggable="true" data-size="large">🪨</div>
+        <div class="stone draggable-stone" draggable="true" data-size="medium">🪨</div>
+        <div class="stone draggable-stone" draggable="true" data-size="small">🪨</div>
+      </div>
+      <button id="closeStoneStacking" class="close-ritual-btn">✕</button>
+    </div>
+  </div>
+
   <script src="config.js" defer></script>
   <script type="module" src="dist/index.js"></script>
 </body>
