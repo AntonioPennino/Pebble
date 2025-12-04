@@ -1,5 +1,5 @@
 import { IGameRulesService } from '../interfaces/IGameRulesService.js';
-import { CoreStats } from '../../types.js';
+import { CoreStats } from '../types.js';
 
 const DECAY_PER_HOUR: CoreStats = {
     hunger: 1.5,

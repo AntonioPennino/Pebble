@@ -1,16 +1,16 @@
 import { $ } from './utils.js';
-import { InventoryEventDetail, PlayerIdChangeDetail, Mood } from '../types.js';
+import { InventoryEventDetail, PlayerIdChangeDetail, Mood } from '../core/types.js';
 import { HUD } from './components/HUD.js';
 import { InventoryView } from './components/InventoryView.js';
 import { OtterRenderer } from './components/OtterRenderer.js';
 import { ModalManager } from './components/ModalManager.js';
 import { NotificationUI } from './components/NotificationUI.js';
-import { initMiniGame, openMiniGame, isMiniGameRunning } from '../minigame.js';
+import { initMiniGame, openMiniGame, isMiniGameRunning } from '../features/minigame.js';
 import { audioManager, resumeAudioContext } from '../core/audio.js';
 import { recordEvent } from '../core/analytics.js';
 import { getGameStateInstance, getSettingsStateInstance, getGameServiceInstance } from '../bootstrap.js';
-import { enableNotifications, disableNotifications } from '../notifications.js';
-import { mountStonePolishingActivity, StonePolishingActivity } from '../stonePolishing.js';
+import { enableNotifications, disableNotifications } from '../core/services/notifications.js';
+import { mountStonePolishingActivity, StonePolishingActivity } from '../features/stonePolishing.js';
 
 export class UIManager {
     private hud: HUD;

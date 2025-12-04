@@ -1,4 +1,4 @@
-import { CoreStats, PebbleGiftEventDetail, AccessoryState, GameStats } from '../types.js';
+import { CoreStats, PebbleGiftEventDetail, AccessoryState, GameStats } from './types.js';
 import { IStorageService } from './interfaces/IStorageService.js';
 import { ICloudService } from './interfaces/ICloudService.js';
 import { IGameRulesService } from './interfaces/IGameRulesService.js';

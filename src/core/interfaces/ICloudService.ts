@@ -1,4 +1,4 @@
-import { CoreStats } from '../../types';
+import { CoreStats } from '../types.js';
 
 export interface SupabaseGameStateRow {
     id: string;

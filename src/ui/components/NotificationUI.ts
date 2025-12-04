@@ -1,6 +1,6 @@
 import { $ } from '../utils.js';
-import { GameState } from '../../types.js';
-import { notificationsSupported } from '../../notifications.js';
+import { GameState } from '../../core/types.js';
+import { notificationsSupported } from '../../core/services/notifications.js';
 
 const STAT_ICONS: Record<'hunger' | 'happy' | 'clean' | 'energy', string> = {
     hunger: '🍗',

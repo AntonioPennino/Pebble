@@ -1,4 +1,4 @@
-import { GameState } from '../../types.js';
+import { GameState } from '../../core/types.js';
 import { $ } from '../utils.js';
 
 export class HUD {

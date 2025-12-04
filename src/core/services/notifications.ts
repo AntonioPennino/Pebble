@@ -1,8 +1,8 @@
-import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPushConfigured } from './config.js';
+import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPushConfigured } from '../config.js';
 import { getSupabaseClient } from './cloudSync.js';
-import { getGameStateInstance, getSettingsStateInstance } from './bootstrap.js';
-import { recordEvent } from './core/analytics.js';
-import { NotificationSettings } from './types.js';
+import { getGameStateInstance, getSettingsStateInstance } from '../../bootstrap.js';
+import { recordEvent } from '../analytics.js';
+import { NotificationSettings } from '../types.js';
 
 const LOW_STAT_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', { title: string; body: string }> = {
   hunger: {

@@ -1,6 +1,6 @@
 import { UIManager } from './ui/UIManager.js';
 import { calculateOfflineProgress, getGameStateInstance, getGameServiceInstance, syncWithSupabase } from './bootstrap.js';
-import { PebbleGiftEventDetail } from './types.js';
+import { PebbleGiftEventDetail } from './core/types.js';
 import { audioManager } from './core/audio.js';
 
 const uiManager = new UIManager();
@@ -92,7 +92,7 @@ function bootstrap(): void {
   void syncWithSupabase();
 
   // Diagnostic: log resolved config values to help debug cloud sync setup
-  void import('./config.js').then(cfg => {
+  void import('./core/config.js').then(cfg => {
     try {
       const supabaseUrl = typeof cfg.getSupabaseUrl === 'function' ? cfg.getSupabaseUrl() : '';
       const anon = typeof cfg.getSupabaseAnonKey === 'function' ? cfg.getSupabaseAnonKey() : '';

@@ -1,4 +1,4 @@
-import { AccessoryState, Mood, OutfitKey } from '../../types.js';
+import { AccessoryState, Mood, OutfitKey } from '../../core/types.js';
 import { $ } from '../utils.js';
 import { audioManager, resumeAudioContext } from '../../core/audio.js';
 

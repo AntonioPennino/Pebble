@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { getSupabaseAnonKey, getSupabaseUrl, isCloudSyncConfigured } from './config.js';
+import { getSupabaseAnonKey, getSupabaseUrl, isCloudSyncConfigured } from '../config.js';
 
 let client: SupabaseClient | null = null;
 

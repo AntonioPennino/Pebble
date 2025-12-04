@@ -1,5 +1,5 @@
-import { getGameServiceInstance } from './bootstrap.js';
-import { audioManager, resumeAudioContext } from './core/audio.js';
+import { getGameServiceInstance } from '../bootstrap.js';
+import { audioManager, resumeAudioContext } from '../core/audio.js';
 
 interface MiniGameElements {
   overlay: HTMLElement;

@@ -1,5 +1,5 @@
 import { getSettingsStateInstance } from '../bootstrap.js';
-import { GameState } from '../types.js';
+import { GameState } from './types.js';
 
 export function recordEvent(name: string): void {
   const settingsState = getSettingsStateInstance();

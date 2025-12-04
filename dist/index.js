@@ -74,7 +74,7 @@ function bootstrap() {
     }
     void syncWithSupabase();
     // Diagnostic: log resolved config values to help debug cloud sync setup
-    void import('./config.js').then(cfg => {
+    void import('./core/config.js').then(cfg => {
         try {
             const supabaseUrl = typeof cfg.getSupabaseUrl === 'function' ? cfg.getSupabaseUrl() : '';
             const anon = typeof cfg.getSupabaseAnonKey === 'function' ? cfg.getSupabaseAnonKey() : '';

@@ -4,12 +4,12 @@ import { InventoryView } from './components/InventoryView.js';
 import { OtterRenderer } from './components/OtterRenderer.js';
 import { ModalManager } from './components/ModalManager.js';
 import { NotificationUI } from './components/NotificationUI.js';
-import { initMiniGame, openMiniGame, isMiniGameRunning } from '../minigame.js';
+import { initMiniGame, openMiniGame, isMiniGameRunning } from '../features/minigame.js';
 import { audioManager, resumeAudioContext } from '../core/audio.js';
 import { recordEvent } from '../core/analytics.js';
 import { getGameStateInstance, getSettingsStateInstance, getGameServiceInstance } from '../bootstrap.js';
-import { enableNotifications, disableNotifications } from '../notifications.js';
-import { mountStonePolishingActivity } from '../stonePolishing.js';
+import { enableNotifications, disableNotifications } from '../core/services/notifications.js';
+import { mountStonePolishingActivity } from '../features/stonePolishing.js';
 export class UIManager {
     constructor() {
         this.touchDrag = null;

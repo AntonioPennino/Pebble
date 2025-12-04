@@ -1,4 +1,4 @@
-import { ThemeMode } from './types.js';
+import { ThemeMode } from '../core/types.js';
 
 export function applyTheme(mode: ThemeMode): void {
   const body = document.body;

@@ -1,4 +1,4 @@
-import { ThemeMode, NotificationSettings } from '../types.js';
+import { ThemeMode, NotificationSettings } from './types.js';
 import { IStorageService } from './interfaces/IStorageService.js';
 
 const SETTINGS_KEY = 'pebble:settings:v1';
