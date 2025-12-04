@@ -180,7 +180,7 @@ export class UIManager {
     initKitchenScene() {
         const foodButtons = document.querySelectorAll('.food-item');
         const dropTargets = document.querySelectorAll('.otter-container, .otter-img');
-        const quickFeedBtn = $('quickFeedBtn');
+        // quickFeedBtn removed
         const setActiveFood = (button) => {
             foodButtons.forEach(btn => btn.classList.remove('selected', 'dragging'));
             if (button) {
@@ -274,21 +274,9 @@ export class UIManager {
             });
             button.addEventListener('dragend', () => resetDragState());
             button.addEventListener('click', () => {
-                if (this.suppressNextClick) {
-                    this.suppressNextClick = false;
-                    return;
-                }
-                setActiveFood(button);
-                this.currentFood = button.dataset.food ?? null;
-                setActiveFood(button);
-                this.currentFood = button.dataset.food ?? null;
-                this.feedWithSnack(button.dataset.food ?? null);
+                // Click to feed disabled in favor of drag and drop
+                this.notificationUI.showAlert('Trascina il cibo sulla lontra per nutrirla!', 'info');
             });
-        });
-        quickFeedBtn?.addEventListener('click', () => {
-            this.currentFood = null;
-            setActiveFood(null);
-            this.feedWithSnack(null);
         });
     }
     feedWithSnack(snack) {
