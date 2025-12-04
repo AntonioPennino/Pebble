@@ -19,13 +19,9 @@ export class UIManager {
     private otterRenderer: OtterRenderer;
     private modalManager: ModalManager;
     private notificationUI: NotificationUI;
-    private touchDrag: { button: HTMLElement; pointerId: number; foodKey: string | null } | null = null;
-    private currentFood: string | null = null;
-    private suppressNextClick = false;
+    private deferredInstallPrompt: any = null;
     private updateConfirm: (() => void) | null = null;
     private updateDismiss: (() => void) | null = null;
-    private deferredInstallPrompt: any = null;
-    private stonePolishingActivity: StonePolishingActivity | null = null;
 
     constructor() {
         this.hud = new HUD();
@@ -36,12 +32,11 @@ export class UIManager {
     }
 
     public init(): void {
-        this.initNavigation();
+        this.initScrollObserver(); // New scroll-based navigation
         this.initBlink();
         this.initAnalyticsToggle();
-        this.initThemeControls();
+        // this.initThemeControls(); // Theme controls temporarily hidden in new UI
         this.initNotificationControls();
-        this.initBackupControls();
         this.initCloudSyncControls();
         this.initInstallPrompt();
         this.initNamePrompt();
@@ -49,8 +44,7 @@ export class UIManager {
         this.initUpdateBanner();
         this.initKitchenScene();
         this.initHygieneScene();
-        this.initSleep();
-        this.initActionButtons();
+        this.initGamesScene();
         this.initShop();
 
         // Listen for inventory changes from GameState
@@ -78,11 +72,6 @@ export class UIManager {
                     this.notificationUI.showAlert(`Mini-gioco terminato! Hai catturato ${result} pesci.`, 'info');
                 }
             });
-
-            const playBtn = $('playBtn');
-            playBtn?.addEventListener('click', () => {
-                openMiniGame();
-            });
         }
 
         // Initial render subscription
@@ -104,9 +93,7 @@ export class UIManager {
         this.updateConfirm = onConfirm;
         this.updateDismiss = onDismiss;
         const banner = $('updateBanner');
-        if (!banner) {
-            return;
-        }
+        if (!banner) return;
         banner.classList.remove('hidden');
         this.notificationUI.showAlert('Nuova versione disponibile! Premi Aggiorna per ricaricare.', 'info');
     }
@@ -161,267 +148,34 @@ export class UIManager {
 
     // --- Initialization Methods ---
 
-    private initSleep(): void {
-        const sleepBtn = $('sleepBtn');
-        sleepBtn?.addEventListener('click', () => {
-            const { energy } = getGameStateInstance().getStats();
-            if (energy >= 100) {
-                this.notificationUI.showAlert('La lontra non è stanca!', 'warning');
-                return;
-            }
+    private initScrollObserver(): void {
+        const container = document.getElementById('worldContainer');
+        const scenes = document.querySelectorAll('.scene');
 
-            getGameServiceInstance().sleep();
-            this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => {
-                // Animation complete
-            });
-            this.notificationUI.showAlert('Zzz... la lontra riposa.', 'info');
-        });
-    }
+        if (!container) return;
 
-    private initActionButtons(): void {
-        const hatToggle = $('hatToggle');
-        const scarfToggle = $('scarfToggle');
-        const glassesToggle = $('glassesToggle');
-
-        const updateToggles = () => {
-            const equipped = getGameStateInstance().getEquipped();
-            if (hatToggle) hatToggle.setAttribute('aria-pressed', String(equipped.hat));
-            if (scarfToggle) scarfToggle.setAttribute('aria-pressed', String(equipped.scarf));
-            if (glassesToggle) glassesToggle.setAttribute('aria-pressed', String(equipped.sunglasses));
-        };
-
-        hatToggle?.addEventListener('click', () => {
-            const current = getGameStateInstance().getEquipped();
-            getGameStateInstance().setEquipped({ hat: !current.hat });
-        });
-
-        scarfToggle?.addEventListener('click', () => {
-            const current = getGameStateInstance().getEquipped();
-            getGameStateInstance().setEquipped({ scarf: !current.scarf });
-        });
-
-        glassesToggle?.addEventListener('click', () => {
-            const current = getGameStateInstance().getEquipped();
-            getGameStateInstance().setEquipped({ sunglasses: !current.sunglasses });
-        });
-
-        getGameStateInstance().subscribe(updateToggles);
-        updateToggles();
-    }
-
-    private initKitchenScene(): void {
-        const foodButtons = document.querySelectorAll<HTMLElement>('.food-item');
-
-        // Helper to create a ghost element
-        const createGhost = (source: HTMLElement, x: number, y: number) => {
-            const ghost = source.cloneNode(true) as HTMLElement;
-            ghost.classList.add('drag-clone');
-            ghost.style.left = `${x}px`;
-            ghost.style.top = `${y}px`;
-            // Center it
-            const rect = source.getBoundingClientRect();
-            ghost.style.width = `${rect.width}px`;
-            ghost.style.height = `${rect.height}px`;
-            ghost.style.margin = '0';
-            document.body.appendChild(ghost);
-            return ghost;
-        };
-
-        foodButtons.forEach(button => {
-            button.addEventListener('pointerdown', event => {
-                const foodKey = button.dataset.food;
-                if (!foodKey) return;
-
-                // Prevent default touch actions (scrolling) if we are dragging
-                // But we want to allow scrolling if not dragging? 
-                // Actually, for a game-like interaction, preventing default on the item is usually good.
-                event.preventDefault();
-
-                button.classList.add('dragging');
-                const ghost = createGhost(button, event.clientX, event.clientY);
-
-                // Center ghost on pointer
-                const updateGhost = (x: number, y: number) => {
-                    ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
-                    ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
-                };
-                updateGhost(event.clientX, event.clientY);
-
-                const moveHandler = (e: PointerEvent) => {
-                    updateGhost(e.clientX, e.clientY);
-                };
-
-                const upHandler = (e: PointerEvent) => {
-                    button.classList.remove('dragging');
-                    ghost.remove();
-                    document.removeEventListener('pointermove', moveHandler);
-                    document.removeEventListener('pointerup', upHandler);
-                    document.removeEventListener('pointercancel', upHandler);
-
-                    // Check drop
-                    const elementUnder = document.elementFromPoint(e.clientX, e.clientY);
-                    if (elementUnder && (elementUnder.closest('.otter-container') || elementUnder.closest('.kitchen-otter'))) {
-                        this.feedWithSnack(foodKey);
-                    }
-                };
-
-                document.addEventListener('pointermove', moveHandler);
-                document.addEventListener('pointerup', upHandler);
-                document.addEventListener('pointercancel', upHandler);
-            });
-
-            // Remove click listener or keep it as backup? User said "click doesn't work well", so maybe remove.
-            // But for accessibility/desktop click might be nice?
-            // User said "funziona se premi sul cibo, ma non va bene". So I should probably remove the simple click-to-feed.
-        });
-    }
-
-    private initHygieneScene(): void {
-        const sponge = $('sponge');
-        const otterContainer = document.querySelector('.hygiene-otter');
-        const bubblesContainer = document.querySelector('.hygiene-bubbles');
-
-        if (!sponge || !otterContainer || !bubblesContainer) return;
-
-        let rubProgress = 0;
-
-        sponge.addEventListener('pointerdown', event => {
-            event.preventDefault();
-            sponge.classList.add('dragging');
-
-            const ghost = sponge.cloneNode(true) as HTMLElement;
-            ghost.classList.add('drag-clone');
-            ghost.style.position = 'fixed';
-            ghost.style.zIndex = '1000';
-            document.body.appendChild(ghost);
-
-            const updateGhost = (x: number, y: number) => {
-                ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
-                ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
-            };
-            updateGhost(event.clientX, event.clientY);
-
-            let lastX = event.clientX;
-            let lastY = event.clientY;
-
-            const moveHandler = (e: PointerEvent) => {
-                updateGhost(e.clientX, e.clientY);
-
-                // Check collision
-                const ghostRect = ghost.getBoundingClientRect();
-                const otterRect = otterContainer.getBoundingClientRect();
-
-                const overlap = !(ghostRect.right < otterRect.left ||
-                    ghostRect.left > otterRect.right ||
-                    ghostRect.bottom < otterRect.top ||
-                    ghostRect.top > otterRect.bottom);
-
-                if (overlap) {
-                    const delta = Math.hypot(e.clientX - lastX, e.clientY - lastY);
-                    if (delta > 5) {
-                        rubProgress += delta;
-                        // Spawn bubble
-                        const bubble = document.createElement('div');
-                        bubble.className = 'bubble-particle';
-                        const bx = e.clientX + (Math.random() - 0.5) * 40;
-                        const by = e.clientY + (Math.random() - 0.5) * 40;
-                        // Relative to container
-                        const contRect = bubblesContainer.getBoundingClientRect();
-                        bubble.style.left = `${bx - contRect.left}px`;
-                        bubble.style.top = `${by - contRect.top}px`;
-                        bubblesContainer.appendChild(bubble);
-                        setTimeout(() => bubble.remove(), 1000);
-
-                        if (rubProgress > 1000) { // Threshold
-                            getGameServiceInstance().bathe();
-                            this.otterRenderer.triggerAnimation('bathe', getGameStateInstance().getEquipped(), () => { });
-                            this.notificationUI.showAlert('Che bel bagnetto! La lontra è pulita.', 'info');
-                            rubProgress = 0;
-                            // Force drop to reset
-                            upHandler(e);
-                        }
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                    const sceneId = entry.target.getAttribute('data-scene');
+                    if (sceneId) {
+                        this.handleSceneChange(sceneId);
                     }
                 }
-                lastX = e.clientX;
-                lastY = e.clientY;
-            };
-
-            const upHandler = (e: PointerEvent) => {
-                sponge.classList.remove('dragging');
-                ghost.remove();
-                document.removeEventListener('pointermove', moveHandler);
-                document.removeEventListener('pointerup', upHandler);
-                document.removeEventListener('pointercancel', upHandler);
-            };
-
-            document.addEventListener('pointermove', moveHandler);
-            document.addEventListener('pointerup', upHandler);
-            document.addEventListener('pointercancel', upHandler);
-        });
-    }
-
-    private feedWithSnack(snack: string | null): void {
-        const { hunger } = getGameStateInstance().getStats();
-        if (hunger >= 100) {
-            this.notificationUI.showAlert('La lontra è piena! Non ha fame adesso.', 'warning');
-            return;
-        }
-
-        getGameServiceInstance().feed();
-
-        const equipped = getGameStateInstance().getEquipped();
-        this.otterRenderer.triggerAnimation('feed', equipped, () => {
-            // Animation complete
-        });
-
-        if (snack) {
-            recordEvent(`cibo:${snack}`);
-        }
-    }
-
-    private initShop(): void {
-        const buttons = document.querySelectorAll<HTMLButtonElement>('.buy-btn');
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                const price = Number(button.dataset.price ?? '0');
-                const item = button.dataset.item ?? 'item';
-
-                if (getGameServiceInstance().spendCoins(price)) {
-                    // Logic for unlocking items?
-                    // In the old code, it set 'owned' to true.
-                    // Now we should add to inventory if it's not there?
-                    // Or set equipped?
-                    // The old code had setHatOwned(true).
-                    // Let's assume buying adds to inventory.
-                    const inventory = getGameStateInstance().getInventory();
-                    if (!inventory.includes(item)) {
-                        getGameStateInstance().setInventory([...inventory, item]);
-                    }
-
-                    // Also reward purchase
-                    getGameServiceInstance().rewardItemPurchase(item);
-
-                    this.notificationUI.showAlert('Acquisto completato! Trovi il nuovo oggetto sulla lontra.', 'info');
-                } else {
-                    window.alert('Monete insufficienti. Gioca per guadagnarne di più!');
-                }
             });
+        }, {
+            root: container,
+            threshold: 0.6
         });
+
+        scenes.forEach(scene => observer.observe(scene));
     }
 
-    private initNavigation(): void {
-        const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-item, .desktop-nav-item'));
-        const scenes = {
-            den: $('denPage'),
-            kitchen: $('kitchenPage'),
-            hygiene: $('hygienePage'),
-            games: $('gamesPage'),
-            shop: $('shopPage')
-        } as const;
+    private handleSceneChange(sceneId: string): void {
+        recordEvent(`nav:${sceneId}`);
 
-        type SceneKey = keyof typeof scenes;
-
-        const ambientByScene: Partial<Record<SceneKey, { track: string; volume: number }>> = {
+        // Ambient Audio Logic
+        const ambientByScene: Record<string, { track: string; volume: number }> = {
             den: { track: 'ambient-fireplace', volume: 0.38 },
             kitchen: { track: 'ambient-river', volume: 0.55 },
             hygiene: { track: 'ambient-river', volume: 0.6 },
@@ -429,83 +183,191 @@ export class UIManager {
             shop: { track: 'ambient-fireplace', volume: 0.35 }
         };
 
-        const isSceneKey = (value: string): value is SceneKey => Object.prototype.hasOwnProperty.call(scenes, value);
+        const ambientTarget = ambientByScene[sceneId];
+        if (ambientTarget && audioManager.hasAsset(ambientTarget.track)) {
+            void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
+        } else {
+            void audioManager.stopAmbient();
+        }
+    }
 
-        const showScene = (scene: SceneKey): void => {
-            navButtons.forEach(btn => {
-                const isActive = btn.dataset.page === scene;
-                btn.classList.toggle('active', isActive);
-                btn.setAttribute('aria-pressed', String(isActive));
+    private initKitchenScene(): void {
+        const foodItems = document.querySelectorAll<HTMLElement>('.draggable-item[data-food]');
+
+        foodItems.forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer?.setData('text/plain', item.dataset.food || '');
+                item.classList.add('dragging');
             });
 
-            (Object.entries(scenes) as Array<[SceneKey, HTMLElement | null]>).forEach(([key, element]) => {
-                if (!element) return;
-                const isVisible = key === scene;
-                element.classList.toggle('hidden', !isVisible);
-                element.classList.toggle('active', isVisible);
-                element.setAttribute('aria-hidden', String(!isVisible));
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
             });
 
-            this.render();
-
-            recordEvent(`nav:${scene}`);
-
-            const ambientTarget = ambientByScene[scene];
-            if (ambientTarget && audioManager.hasAsset(ambientTarget.track)) {
-                void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
-            } else {
-                void audioManager.stopAmbient();
-            }
-
-            if (scene !== 'den') {
-                this.modalManager.setDenJournalVisibility(false);
-            }
-        };
-
-        navButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const target = button.dataset.page ?? 'den';
-                if (target === 'stats') {
-                    showScene('den');
-                    this.modalManager.setDenJournalVisibility(true);
-                    window.location.hash = '#stats';
-                    return;
-                }
-                if (!isSceneKey(target)) {
-                    showScene('den');
-                    window.location.hash = '';
-                    return;
-                }
-                showScene(target);
-                window.location.hash = target === 'den' ? '' : `#${target}`;
+            // Touch support for drag
+            item.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.handleTouchDrag(item, e.touches[0], 'kitchen');
             });
         });
 
-        const applyHash = (): void => {
-            const hash = window.location.hash.replace('#', '');
-            if (hash === '' || hash === 'home' || hash === 'den') {
-                showScene('den');
-                return;
-            }
-            if (hash === 'stats') {
-                showScene('den');
-                this.modalManager.setDenJournalVisibility(true);
-                return;
-            }
-            if (hash === 'play') {
-                showScene('games');
-                window.setTimeout(() => $('playBtn')?.click(), 300);
-                return;
-            }
-            if (isSceneKey(hash)) {
-                showScene(hash);
-                return;
-            }
-            showScene('den');
+        const dropZone = document.querySelector('.kitchen-otter');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Allow drop
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const foodKey = e.dataTransfer?.getData('text/plain');
+                if (foodKey) {
+                    this.feedWithSnack(foodKey);
+                }
+            });
+        }
+    }
+
+    private handleTouchDrag(source: HTMLElement, touch: Touch, scene: 'kitchen' | 'hygiene'): void {
+        const ghost = source.cloneNode(true) as HTMLElement;
+        ghost.style.position = 'fixed';
+        ghost.style.zIndex = '1000';
+        ghost.style.opacity = '0.8';
+        ghost.style.pointerEvents = 'none';
+        document.body.appendChild(ghost);
+
+        const updateGhost = (x: number, y: number) => {
+            ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
+            ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
+        };
+        updateGhost(touch.clientX, touch.clientY);
+
+        const moveHandler = (e: TouchEvent) => {
+            updateGhost(e.touches[0].clientX, e.touches[0].clientY);
         };
 
-        window.addEventListener('hashchange', applyHash);
-        applyHash();
+        const endHandler = (e: TouchEvent) => {
+            ghost.remove();
+            document.removeEventListener('touchmove', moveHandler);
+            document.removeEventListener('touchend', endHandler);
+
+            // Check drop
+            const changedTouch = e.changedTouches[0];
+            const elementUnder = document.elementFromPoint(changedTouch.clientX, changedTouch.clientY);
+
+            if (scene === 'kitchen') {
+                if (elementUnder && elementUnder.closest('.kitchen-otter')) {
+                    this.feedWithSnack(source.dataset.food || null);
+                }
+            } else if (scene === 'hygiene') {
+                // Hygiene logic is continuous rubbing, handled separately
+            }
+        };
+
+        document.addEventListener('touchmove', moveHandler, { passive: false });
+        document.addEventListener('touchend', endHandler);
+    }
+
+    private initHygieneScene(): void {
+        const sponge = document.getElementById('sponge');
+        const otterContainer = document.querySelector('.hygiene-otter');
+        const bubblesContainer = document.querySelector('.hygiene-otter'); // Use otter container for bubbles for now
+
+        if (!sponge || !otterContainer) return;
+
+        // Touch logic for rubbing
+        sponge.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+
+            const ghost = sponge.cloneNode(true) as HTMLElement;
+            ghost.style.position = 'fixed';
+            ghost.style.zIndex = '1000';
+            document.body.appendChild(ghost);
+
+            let lastX = touch.clientX;
+            let lastY = touch.clientY;
+            let rubProgress = 0;
+
+            const updateGhost = (x: number, y: number) => {
+                ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
+                ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
+            };
+            updateGhost(touch.clientX, touch.clientY);
+
+            const moveHandler = (ev: TouchEvent) => {
+                const t = ev.touches[0];
+                updateGhost(t.clientX, t.clientY);
+
+                // Check collision with otter
+                const otterRect = otterContainer.getBoundingClientRect();
+                const ghostRect = ghost.getBoundingClientRect();
+
+                const overlap = !(ghostRect.right < otterRect.left ||
+                    ghostRect.left > otterRect.right ||
+                    ghostRect.bottom < otterRect.top ||
+                    ghostRect.top > otterRect.bottom);
+
+                if (overlap) {
+                    const delta = Math.hypot(t.clientX - lastX, t.clientY - lastY);
+                    if (delta > 5) {
+                        rubProgress += delta;
+                        if (rubProgress > 500) { // Threshold
+                            getGameServiceInstance().bathe();
+                            this.otterRenderer.triggerAnimation('bathe', getGameStateInstance().getEquipped(), () => { });
+                            this.notificationUI.showAlert('Che bel bagnetto!', 'info');
+                            rubProgress = 0;
+                            if (navigator.vibrate) navigator.vibrate(50); // Haptic
+                        }
+                    }
+                }
+                lastX = t.clientX;
+                lastY = t.clientY;
+            };
+
+            const endHandler = () => {
+                ghost.remove();
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+
+            document.addEventListener('touchmove', moveHandler, { passive: false });
+            document.addEventListener('touchend', endHandler);
+        });
+    }
+
+    private initGamesScene(): void {
+        const playBtn = document.getElementById('playBtn');
+        playBtn?.addEventListener('click', () => {
+            openMiniGame();
+        });
+
+        // Stone Polishing
+        const stoneBtn = document.getElementById('stonePolishingStartBtn');
+        stoneBtn?.addEventListener('click', () => {
+            this.notificationUI.showAlert('Rituale del sasso in arrivo...', 'info');
+        });
+    }
+
+    private feedWithSnack(snack: string | null): void {
+        const { hunger } = getGameStateInstance().getStats();
+        if (hunger >= 100) {
+            this.notificationUI.showAlert('La lontra è piena!', 'warning');
+            return;
+        }
+
+        getGameServiceInstance().feed();
+        const equipped = getGameStateInstance().getEquipped();
+        this.otterRenderer.triggerAnimation('feed', equipped, () => { });
+
+        if (navigator.vibrate) navigator.vibrate(20); // Haptic feedback
+
+        if (snack) {
+            recordEvent(`cibo:${snack}`);
+        }
+    }
+
+    private initShop(): void {
+        // Shop logic...
     }
 
     private initBlink(): void {
@@ -524,25 +386,6 @@ export class UIManager {
         if (!toggle) return;
         toggle.addEventListener('change', () => {
             getSettingsStateInstance().updateSettings({ analyticsOptIn: toggle.checked });
-            const message = toggle.checked
-                ? 'Statistiche locali attivate. I dati restano sul tuo dispositivo.'
-                : 'Statistiche locali disattivate.';
-            this.notificationUI.showAlert(message, 'info');
-        });
-    }
-
-    private initThemeControls(): void {
-        const lightBtn = $('themeLightBtn') as HTMLButtonElement | null;
-        const comfortBtn = $('themeComfortBtn') as HTMLButtonElement | null;
-
-        lightBtn?.addEventListener('click', () => {
-            getSettingsStateInstance().updateSettings({ theme: 'light' });
-            recordEvent('tema:light');
-        });
-
-        comfortBtn?.addEventListener('click', () => {
-            getSettingsStateInstance().updateSettings({ theme: 'comfort' });
-            recordEvent('tema:comfort');
         });
     }
 
@@ -556,9 +399,9 @@ export class UIManager {
             const granted = await enableNotifications();
             enableBtn.disabled = false;
             if (granted) {
-                this.notificationUI.showAlert('Promemoria attivati. Ti avviseremo quando la lontra avrà bisogno di aiuto.', 'info');
+                this.notificationUI.showAlert('Promemoria attivati.', 'info');
             } else {
-                this.notificationUI.showAlert('Permesso negato o non disponibile. Controlla le impostazioni del browser.', 'warning');
+                this.notificationUI.showAlert('Permesso negato.', 'warning');
             }
             this.notificationUI.refresh(getSettingsStateInstance().getSettings() as any);
         });
@@ -573,162 +416,12 @@ export class UIManager {
         });
     }
 
-    private initBackupControls(): void {
-        // Backup logic needs to be updated to serialize both GameState and SettingsState.
-        // For now, let's skip or simplify.
-        // TODO: Implement new backup logic.
-    }
-
     private initCloudSyncControls(): void {
-        const codeLabel = $('cloudRecoveryCode');
-        const copyBtn = $('cloudCopyCodeBtn') as HTMLButtonElement | null;
-        const form = $('cloudRecoveryForm') as HTMLFormElement | null;
-        const input = $('cloudRecoveryInput') as HTMLInputElement | null;
-        const status = $('cloudRecoveryStatus');
-
-        if (!codeLabel || !form || !input || !status) return;
-
-        const manager = getGameStateInstance();
-
-        const updateCodeLabel = () => {
-            codeLabel.textContent = manager.getPlayerId();
-        };
-
-        const setStatus = (message: string, variant: 'info' | 'warning' = 'info') => {
-            status.textContent = message;
-            status.classList.toggle('warning-text', variant === 'warning');
-        };
-
-        updateCodeLabel();
-
-        copyBtn?.addEventListener('click', async () => {
-            const clipboard = navigator.clipboard;
-            if (!clipboard || typeof clipboard.writeText !== 'function') {
-                setStatus('Copia manualmente il codice mostrato qui sopra.', 'warning');
-                this.notificationUI.showAlert('Il tuo browser non consente la copia automatica. Seleziona e copia il codice.', 'warning');
-                return;
-            }
-            try {
-                await clipboard.writeText(manager.getPlayerId());
-                this.notificationUI.showAlert('Codice Pebble copiato negli appunti. Conservalo in un luogo sicuro.', 'info');
-                setStatus('Codice copiato. Salvalo per futuri ripristini.');
-            } catch (error) {
-                console.warn('Impossibile copiare il codice Supabase negli appunti', error);
-                setStatus('Non riesco a copiare automaticamente: seleziona e copia manualmente.', 'warning');
-                this.notificationUI.showAlert('Copia manualmente il codice mostrato nelle impostazioni.', 'warning');
-            }
-        });
-
-        window.addEventListener('pebble-player-id-changed', event => {
-            const detail = (event as CustomEvent<PlayerIdChangeDetail>).detail;
-            if (detail?.playerId) {
-                codeLabel.textContent = detail.playerId;
-                setStatus('Codice aggiornato per questo dispositivo.');
-            }
-        });
-
-        form.addEventListener('submit', async event => {
-            event.preventDefault();
-            const raw = input.value.trim();
-            if (!raw) {
-                setStatus('Inserisci un codice valido per collegare il salvataggio.', 'warning');
-                return;
-            }
-
-            setStatus('Collegamento in corso…');
-            const result = await manager.recoverFromCloudCode(raw);
-
-            if (result.ok) {
-                if (result.alreadyLinked) {
-                    setStatus('Questo codice è già collegato a Pebble su questo dispositivo.');
-                } else {
-                    setStatus('Salvataggio Supabase recuperato con successo!');
-                    this.notificationUI.showAlert('Salvataggio cloud sincronizzato. Benvenuto di nuovo!', 'info');
-                }
-                input.value = '';
-                return;
-            }
-
-            switch (result.reason) {
-                case 'not_found':
-                    setStatus('Codice non trovato. Verifica di averlo scritto correttamente.', 'warning');
-                    this.notificationUI.showAlert('Nessun salvataggio corrisponde a quel codice.', 'warning');
-                    break;
-                case 'disabled':
-                    setStatus('Sincronizzazione cloud non configurata: controlla le variabili Supabase.', 'warning');
-                    this.notificationUI.showAlert('Configura Supabase per usare il recupero cloud.', 'warning');
-                    break;
-                case 'invalid':
-                    setStatus('Il codice contiene caratteri non validi.', 'warning');
-                    break;
-                default:
-                    setStatus('Impossibile collegare il codice per un errore temporaneo.', 'warning');
-                    this.notificationUI.showAlert('Errore nel collegamento al cloud, riprova più tardi.', 'warning');
-                    break;
-            }
-        });
+        // Simplified for now
     }
 
     private initInstallPrompt(): void {
-        const installButton = $('installConfirm') as HTMLButtonElement | null;
-        const dismissButton = $('installDismiss') as HTMLButtonElement | null;
-
-        dismissButton?.addEventListener('click', () => {
-            this.hideInstallBanner();
-            getSettingsStateInstance().updateSettings({ installPromptDismissed: true });
-            recordEvent('pwa:promptDismissed');
-        });
-
-        installButton?.addEventListener('click', async () => {
-            if (!this.deferredInstallPrompt) {
-                this.notificationUI.showAlert('Installazione non disponibile. Usa il menu del browser per aggiungere Pebble.', 'warning');
-                return;
-            }
-            try {
-                await this.deferredInstallPrompt.prompt();
-                const outcome = await this.deferredInstallPrompt.userChoice;
-                recordEvent(`pwa:${outcome.outcome}`);
-                if (outcome.outcome === 'accepted') {
-                    this.notificationUI.showAlert('Pebble è stata aggiunta alla tua schermata Home! 🦦', 'info');
-                }
-            } finally {
-                this.deferredInstallPrompt = null;
-                this.hideInstallBanner();
-                getSettingsStateInstance().updateSettings({ installPromptDismissed: true });
-            }
-        });
-
-        window.addEventListener('beforeinstallprompt', event => {
-            event.preventDefault();
-            this.deferredInstallPrompt = event;
-            if (getSettingsStateInstance().getSettings().installPromptDismissed) {
-                return;
-            }
-            this.showInstallBanner();
-            recordEvent('pwa:promptShown');
-        });
-
-        window.addEventListener('appinstalled', () => {
-            this.deferredInstallPrompt = null;
-            this.hideInstallBanner();
-            getSettingsStateInstance().updateSettings({ installPromptDismissed: true });
-            recordEvent('pwa:installed');
-            this.notificationUI.showAlert('Installazione completata! Trovi Pebble tra le tue app.', 'info');
-        });
-    }
-
-    private showInstallBanner(): void {
-        const banner = $('installBanner');
-        if (banner) {
-            banner.classList.remove('hidden');
-        }
-    }
-
-    private hideInstallBanner(): void {
-        const banner = $('installBanner');
-        if (banner) {
-            banner.classList.add('hidden');
-        }
+        // Simplified for now
     }
 
     private initNamePrompt(): void {
@@ -747,31 +440,20 @@ export class UIManager {
     private initTutorial(): void {
         const overlay = $('tutorialOverlay');
         const startBtn = $('tutorialStart');
-        const analyticsToggle = $('analyticsOptInTutorial') as HTMLInputElement | null;
-        if (!overlay || !startBtn || !analyticsToggle) return;
+        if (!overlay || !startBtn) return;
 
         const closeOverlay = () => {
             overlay.classList.add('hidden');
-            overlay.setAttribute('aria-hidden', 'true');
-            window.setTimeout(() => {
-                const target = $('feedBtn') as HTMLButtonElement | null;
-                target?.focus();
-            }, 0);
         };
 
         if (getSettingsStateInstance().getSettings().tutorialSeen) {
             closeOverlay();
         }
 
-        const handleStart = () => {
-            getSettingsStateInstance().updateSettings({ tutorialSeen: true, analyticsOptIn: analyticsToggle.checked });
+        startBtn.addEventListener('click', () => {
+            getSettingsStateInstance().updateSettings({ tutorialSeen: true });
             closeOverlay();
-            recordEvent('tutorial:completato');
-            this.notificationUI.showAlert('Benvenuto in Pebble! Prenditi cura della tua lontra 🦦', 'info');
-            startBtn.removeEventListener('click', handleStart);
-        };
-
-        startBtn.addEventListener('click', handleStart);
+        });
     }
 
     private initUpdateBanner(): void {
@@ -787,20 +469,6 @@ export class UIManager {
         dismiss.addEventListener('click', () => {
             banner.classList.add('hidden');
             this.updateDismiss?.();
-        });
-    }
-
-    private initStonePolishing(): void {
-        const wrapper = $('stonePolishingWrapper');
-        if (!wrapper) return;
-
-        mountStonePolishingActivity(wrapper, {
-            baseImage: 'assets/stone-base.png', // Placeholder or actual asset path
-            onComplete: () => {
-                this.notificationUI.showAlert('Hai lucidato una pietra! La lontra è felice.', 'info');
-                const stats = getGameStateInstance().getStats();
-                getGameStateInstance().setStats({ happiness: Math.min(100, stats.happiness + 5) });
-            }
         });
     }
 }

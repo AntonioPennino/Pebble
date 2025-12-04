@@ -1,32 +1,247 @@
 /* 
-  Pebble - Clean Slate
-  Ready for new branding.
+  Pebble - The Infinite Panorama 
+  Design Philosophy: Organic Minimalism & Direct Manipulation
 */
+
+:root {
+  /* Typography - Humanist Sans */
+  --font-base: 'Nunito', system-ui, -apple-system, sans-serif;
+  
+  /* Palette - Organic & Warm */
+  --bg-dawn: linear-gradient(135deg, #FDFBF7 0%, #F3EFE7 100%);
+  --text-ink: #3E2723; /* Deep Warm Brown - Never Black */
+  --text-soft: #8D6E63;
+  
+  /* Glassmorphism - The Material */
+  --glass-surface: rgba(255, 255, 255, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 8px 32px rgba(62, 39, 35, 0.06); /* Ultra soft shadow */
+  
+  /* Accents - Nature Inspired */
+  --accent-teal: #4DB6AC;
+  --accent-coral: #FFAB91;
+  --accent-sand: #D7CCC8;
+  
+  /* Metrics */
+  --radius-lg: 32px;
+  --radius-md: 24px;
+  --radius-sm: 16px;
+  --space-unit: 8px;
+}
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
-  padding: 20px;
-  line-height: 1.5;
+  margin: 0;
+  font-family: var(--font-base);
+  color: var(--text-ink);
+  background: var(--bg-dawn);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden; /* The body doesn't scroll, the world does */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Minimal layout to keep content visible during redesign */
+/* The Infinite Panorama Container */
 main {
-  max-width: 600px;
-  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  width: 100vw;
+  height: 100%;
 }
 
-img {
-  max-width: 100%;
-  display: block;
+/* The Scenes - Full Screen Slices */
+.scene {
+  min-width: 100vw;
+  height: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 24px;
+  padding-top: 80px; /* Space for header */
 }
 
-button {
-  cursor: pointer;
+/* Header - Floating & Minimal */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 24px;
+  padding-top: max(20px, env(safe-area-inset-top));
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none; /* Let clicks pass through */
+}
+
+.header-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: auto;
+}
+
+h1 {
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+  color: var(--text-ink);
+  margin: 0;
+}
+
+.brand-lowercase {
+  text-transform: lowercase;
+}
+
+/* Currency - Floating Pill */
+.coins-display {
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
   padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+  font-weight: 700;
+  color: var(--accent-coral);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--glass-shadow);
 }
+
+/* Settings Button - Minimal Icon */
+.icon-btn {
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--text-soft);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--glass-shadow);
+}
+
+.icon-btn:active {
+  transform: scale(0.9);
+}
+
+/* Otter Container - The Centerpiece */
+.otter-container, .kitchen-otter, .hygiene-otter, .games-otter {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  /* No drop shadow on the otter itself, let it feel grounded */
+}
+
+.otter-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(62, 39, 35, 0.1)); /* Very subtle grounding shadow */
+}
+
+/* Contextual Tools - Floating Glass Containers */
+.context-panel {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  animation: floatUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Draggable Items */
+.draggable-item {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  cursor: grab;
+  transition: transform 0.2s;
+}
+
+.draggable-item:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+/* Status Indicators - Minimal Dots */
+.status-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-soft);
+  opacity: 0.3;
+  transition: all 0.3s;
+}
+
+.dot.active {
+  opacity: 1;
+  background: var(--accent-teal);
+  transform: scale(1.2);
+}
+
+/* Typography Utilities */
+.text-center { text-align: center; }
+.text-soft { color: var(--text-soft); }
+.font-bold { font-weight: 700; }
+
+/* Hide Scrollbar */
+main::-webkit-scrollbar {
+  display: none;
+}
+main {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Utilities */
+.hidden { display: none !important; }
+
