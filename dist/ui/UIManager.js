@@ -15,6 +15,10 @@ export class UIManager {
         this.deferredInstallPrompt = null;
         this.updateConfirm = null;
         this.updateDismiss = null;
+        this.currentAnimationId = null;
+        this.fireflyAnimationId = null;
+        this.stars = [];
+        this.connections = [];
         this.hud = new HUD();
         this.inventoryView = new InventoryView();
         this.otterRenderer = new OtterRenderer();
@@ -305,7 +309,111 @@ export class UIManager {
             if (overlay)
                 overlay.classList.remove('hidden');
         });
-        this.initStoneStacking();
+        // The Current (Water Flow)
+        const currentBtn = document.createElement('div');
+        currentBtn.className = 'draggable-item';
+        currentBtn.textContent = '🌊';
+        currentBtn.id = 'currentRitualStartBtn';
+        // Append to context panel if not exists, or just use existing logic if I can find where to put it.
+        // For now, let's assume I need to add it to the HTML manually or just append it here if the container exists.
+        // Actually, let's just bind to an ID that I will add to index.html later or now.
+        // Let's assume the user wants me to add the button to index.html as well.
+        // For now, I'll just add the listener and assume the button exists or I'll add it in a separate step.
+        // Let's add the button to the DOM dynamically for now to save a step, or better, just bind it.
+        // I will add the button to index.html in the next step.
+        const currentStartBtn = document.getElementById('currentRitualStartBtn');
+        currentStartBtn?.addEventListener('click', () => {
+            const overlay = $('currentRitualOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                this.startCurrentAnimation();
+            }
+        });
+        this.initCurrentRitual();
+        // Firefly Connection (Constellations)
+        const fireflyStartBtn = document.getElementById('fireflyRitualStartBtn');
+        fireflyStartBtn?.addEventListener('click', () => {
+            const overlay = $('fireflyRitualOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                this.startFireflyLevel();
+            }
+        });
+        this.initFireflyRitual();
+    }
+    initCurrentRitual() {
+        const overlay = $('currentRitualOverlay');
+        const closeBtn = $('closeCurrentRitual');
+        if (!overlay || !closeBtn)
+            return;
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+            if (this.currentAnimationId) {
+                cancelAnimationFrame(this.currentAnimationId);
+                this.currentAnimationId = null;
+            }
+        });
+    }
+    startCurrentAnimation() {
+        const canvas = $('currentCanvas');
+        if (!canvas)
+            return;
+        canvas.innerHTML = ''; // Clear
+        const particles = [];
+        // Create particles
+        for (let i = 0; i < 50; i++) {
+            const p = document.createElement('div');
+            p.classList.add('flow-particle');
+            const size = Math.random() * 20 + 10;
+            p.style.width = `${size}px`;
+            p.style.height = `${size}px`;
+            canvas.appendChild(p);
+            particles.push({
+                x: Math.random() * canvas.offsetWidth,
+                y: Math.random() * canvas.offsetHeight,
+                speed: Math.random() * 2 + 1,
+                size: size,
+                element: p
+            });
+        }
+        let mouseX = -1000;
+        let mouseY = -1000;
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+        }, { passive: true });
+        const animate = () => {
+            particles.forEach(p => {
+                p.y += p.speed;
+                // Interaction: Repel from mouse/touch
+                const dx = p.x - mouseX;
+                const dy = p.y - mouseY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 100) {
+                    const angle = Math.atan2(dy, dx);
+                    p.x += Math.cos(angle) * 5;
+                    p.y += Math.sin(angle) * 5;
+                }
+                // Reset if out of bounds
+                if (p.y > canvas.offsetHeight + 50) {
+                    p.y = -50;
+                    p.x = Math.random() * canvas.offsetWidth;
+                }
+                if (p.x > canvas.offsetWidth + 50)
+                    p.x = -50;
+                if (p.x < -50)
+                    p.x = canvas.offsetWidth + 50;
+                p.element.style.transform = `translate(${p.x}px, ${p.y}px)`;
+            });
+            this.currentAnimationId = requestAnimationFrame(animate);
+        };
+        animate();
     }
     initStoneStacking() {
         const overlay = $('stoneStackingOverlay');
@@ -316,7 +424,6 @@ export class UIManager {
             return;
         closeBtn.addEventListener('click', () => {
             overlay.classList.add('hidden');
-            // Reset stack? Maybe keep it persistent? For now, reset visually but keep logic simple.
             dropZone.innerHTML = '<div class="base-stone"></div>';
         });
         let stackHeight = 40; // Base stone height
@@ -357,18 +464,14 @@ export class UIManager {
             }
             // Stack logic (simplified physics)
             newStone.style.bottom = `${stackHeight}px`;
-            // Random slight offset for "organic" feel
             const offset = (Math.random() - 0.5) * 20;
             newStone.style.left = `calc(50% + ${offset}px)`;
             newStone.style.transform = `translateX(-50%) rotate(${(Math.random() - 0.5) * 10}deg)`;
             dropZone.appendChild(newStone);
-            // Update height
             const addedHeight = size === 'large' ? 50 : size === 'medium' ? 40 : 30;
             stackHeight += addedHeight;
-            // Feedback
             if (navigator.vibrate)
                 navigator.vibrate(20);
-            // Win condition / Zen moment?
             if (stackHeight > 300) {
                 this.notificationUI.showAlert('Che equilibrio perfetto...', 'info');
             }
@@ -384,7 +487,7 @@ export class UIManager {
         const equipped = getGameStateInstance().getEquipped();
         this.otterRenderer.triggerAnimation('feed', equipped, () => { });
         if (navigator.vibrate)
-            navigator.vibrate(20); // Haptic feedback
+            navigator.vibrate(20);
         if (snack) {
             recordEvent(`cibo:${snack}`);
         }
@@ -418,6 +521,141 @@ export class UIManager {
                 }
             });
         });
+    }
+    initFireflyRitual() {
+        const overlay = $('fireflyRitualOverlay');
+        const closeBtn = $('closeFireflyRitual');
+        if (!overlay || !closeBtn)
+            return;
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+            // Reset logic if needed
+        });
+    }
+    startFireflyLevel() {
+        const canvas = $('fireflyCanvas');
+        if (!canvas)
+            return;
+        // Resize canvas
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx)
+            return;
+        // Generate Stars
+        this.stars = [];
+        this.connections = [];
+        for (let i = 0; i < 8; i++) {
+            this.stars.push({
+                x: Math.random() * (canvas.width - 100) + 50,
+                y: Math.random() * (canvas.height - 100) + 50,
+                connected: false,
+                id: i
+            });
+        }
+        let isDragging = false;
+        let startStar = null;
+        let currentMouse = { x: 0, y: 0 };
+        const getStarAt = (x, y) => {
+            return this.stars.find(s => Math.hypot(s.x - x, s.y - y) < 30);
+        };
+        const startHandler = (x, y) => {
+            const star = getStarAt(x, y);
+            if (star) {
+                isDragging = true;
+                startStar = star.id;
+                currentMouse = { x, y };
+            }
+        };
+        const moveHandler = (x, y) => {
+            if (isDragging) {
+                currentMouse = { x, y };
+                draw();
+            }
+        };
+        const endHandler = (x, y) => {
+            if (isDragging && startStar !== null) {
+                const targetStar = getStarAt(x, y);
+                if (targetStar && targetStar.id !== startStar) {
+                    // Connect!
+                    // Check if already connected
+                    const exists = this.connections.some(c => (c.from === startStar && c.to === targetStar.id) ||
+                        (c.from === targetStar.id && c.to === startStar));
+                    if (!exists) {
+                        this.connections.push({ from: startStar, to: targetStar.id });
+                        if (navigator.vibrate)
+                            navigator.vibrate([10, 30, 10]);
+                        // Check completion (simple: 7 connections for 8 stars = tree)
+                        if (this.connections.length >= this.stars.length - 1) {
+                            this.notificationUI.showAlert('Una nuova costellazione!', 'info');
+                        }
+                    }
+                }
+            }
+            isDragging = false;
+            startStar = null;
+            draw();
+        };
+        // Events
+        canvas.onmousedown = e => startHandler(e.offsetX, e.offsetY);
+        canvas.onmousemove = e => moveHandler(e.offsetX, e.offsetY);
+        canvas.onmouseup = e => endHandler(e.offsetX, e.offsetY);
+        canvas.ontouchstart = e => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            startHandler(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        };
+        canvas.ontouchmove = e => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            moveHandler(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        };
+        canvas.ontouchend = e => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            // Use changedTouches for end
+            endHandler(e.changedTouches[0].clientX - rect.left, e.changedTouches[0].clientY - rect.top);
+        };
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Draw connections
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 2;
+            this.connections.forEach(c => {
+                const s1 = this.stars.find(s => s.id === c.from);
+                const s2 = this.stars.find(s => s.id === c.to);
+                if (s1 && s2) {
+                    ctx.beginPath();
+                    ctx.moveTo(s1.x, s1.y);
+                    ctx.lineTo(s2.x, s2.y);
+                    ctx.stroke();
+                }
+            });
+            // Draw active line
+            if (isDragging && startStar !== null) {
+                const s = this.stars.find(s => s.id === startStar);
+                if (s) {
+                    ctx.beginPath();
+                    ctx.moveTo(s.x, s.y);
+                    ctx.lineTo(currentMouse.x, currentMouse.y);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+            // Draw stars
+            this.stars.forEach(s => {
+                ctx.fillStyle = '#FFF';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#FFF';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+        };
+        draw();
     }
     initBlink() {
         window.setInterval(() => {
