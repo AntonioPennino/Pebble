@@ -36,6 +36,7 @@ export class UIManager {
         this.initHygieneScene();
         this.initGamesScene();
         this.initShop();
+        this.initJournal(); // New Journal Init
         // Listen for inventory changes from GameState
         window.addEventListener('pebble-inventory-changed', event => {
             const detail = event.detail;
@@ -69,7 +70,15 @@ export class UIManager {
         // Resume audio context on first click
         document.addEventListener('click', () => {
             void resumeAudioContext();
-        }, { once: true });
+            // Exit Zen Mode on click if active? Or maybe a specific gesture?
+            // For now, let's keep Zen Mode strict until toggled off in journal, 
+            // BUT we need a way to open the journal if in Zen Mode?
+            // Actually, Zen Mode hides the trigger too. 
+            // Let's make tapping the screen in Zen Mode briefly show the UI.
+            if (document.body.classList.contains('zen-mode')) {
+                this.tempShowUI();
+            }
+        }, { capture: true }); // Capture to handle before other clicks if needed
     }
     prepareUpdatePrompt(onConfirm, onDismiss) {
         this.updateConfirm = onConfirm;
@@ -405,5 +414,69 @@ export class UIManager {
             banner.classList.add('hidden');
             this.updateDismiss?.();
         });
+    }
+    initJournal() {
+        const trigger = $('journalTrigger');
+        const overlay = $('journalOverlay');
+        const closeBtn = $('journalCloseBtn');
+        if (!trigger || !overlay || !closeBtn)
+            return;
+        trigger.addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+            this.updateJournalStats();
+        });
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+        // Page Navigation
+        document.querySelectorAll('.next-page-btn, .prev-page-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetPage = e.target.dataset.target;
+                if (targetPage) {
+                    document.querySelectorAll('.journal-page').forEach(page => page.classList.add('hidden'));
+                    document.querySelector(`.journal-page[data-page="${targetPage}"]`)?.classList.remove('hidden');
+                }
+            });
+        });
+        // Zen Mode Toggle
+        const zenToggle = $('zenModeToggle');
+        if (zenToggle) {
+            zenToggle.addEventListener('change', () => {
+                if (zenToggle.checked) {
+                    document.body.classList.add('zen-mode');
+                    overlay.classList.add('hidden'); // Close journal to enjoy Zen
+                    this.notificationUI.showAlert('Zen Mode attiva. Tocca lo schermo per mostrare i controlli.', 'info');
+                }
+                else {
+                    document.body.classList.remove('zen-mode');
+                }
+            });
+        }
+    }
+    updateJournalStats() {
+        const stats = getGameStateInstance().getStats();
+        const petName = getGameStateInstance().getPetName();
+        const happyEl = $('journalHappy');
+        const hungerEl = $('journalHunger');
+        const nameEl = $('journalPetName');
+        const daysEl = $('daysCount');
+        if (happyEl)
+            happyEl.textContent = stats.happiness > 70 ? 'Molto Felice' : stats.happiness > 30 ? 'Serena' : 'Triste';
+        if (hungerEl)
+            hungerEl.textContent = stats.hunger > 70 ? 'Piena' : stats.hunger > 30 ? 'Soddisfatta' : 'Affamata';
+        if (nameEl)
+            nameEl.textContent = petName || 'Pebble';
+        if (daysEl)
+            daysEl.textContent = '1'; // Placeholder for now, need to track days in GameState
+    }
+    tempShowUI() {
+        document.body.classList.remove('zen-mode');
+        setTimeout(() => {
+            // Only re-enable zen mode if the toggle is still checked
+            const zenToggle = $('zenModeToggle');
+            if (zenToggle && zenToggle.checked) {
+                document.body.classList.add('zen-mode');
+            }
+        }, 3000);
     }
 }
