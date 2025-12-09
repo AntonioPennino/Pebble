@@ -346,7 +346,10 @@ export class UIManager {
         const closeBtn = $('closeCurrentRitual');
         if (!overlay || !closeBtn)
             return;
-        closeBtn.addEventListener('click', () => {
+        // Clone to remove old listeners
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', () => {
             overlay.classList.add('hidden');
             if (this.currentAnimationId) {
                 cancelAnimationFrame(this.currentAnimationId);
@@ -422,9 +425,13 @@ export class UIManager {
         const sourceStones = document.querySelectorAll('.draggable-stone');
         if (!overlay || !closeBtn || !dropZone)
             return;
-        closeBtn.addEventListener('click', () => {
+        // Remove existing listeners to avoid duplicates if called multiple times
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', () => {
             overlay.classList.add('hidden');
             dropZone.innerHTML = '<div class="base-stone"></div>';
+            stackHeight = 40; // Reset stack height
         });
         let stackHeight = 40; // Base stone height
         sourceStones.forEach(stone => {
@@ -527,7 +534,10 @@ export class UIManager {
         const closeBtn = $('closeFireflyRitual');
         if (!overlay || !closeBtn)
             return;
-        closeBtn.addEventListener('click', () => {
+        // Clone to remove old listeners
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', () => {
             overlay.classList.add('hidden');
             // Reset logic if needed
         });
