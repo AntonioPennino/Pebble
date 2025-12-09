@@ -358,6 +358,8 @@ export class UIManager {
             if (overlay) overlay.classList.remove('hidden');
         });
 
+        this.initStoneStacking();
+
         // The Current (Water Flow)
         const currentBtn = document.createElement('div');
         currentBtn.className = 'draggable-item';
