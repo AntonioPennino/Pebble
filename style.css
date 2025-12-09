@@ -663,17 +663,17 @@ body.zen-mode .coins-display {
 /* Lantern Trigger */
 .lantern-trigger {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 2.5rem;
+    top: 30px;
+    right: 30px;
+    font-size: 4rem; /* Much bigger */
     cursor: pointer;
     transition: transform 0.3s ease, filter 0.3s ease;
-    z-index: 100;
+    z-index: 1000; /* Ensure on top */
 }
 
 .lantern-trigger:hover {
     transform: scale(1.1) rotate(5deg);
-    filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.6));
+    filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.8));
 }
 
 body.night-mode .lantern-trigger {
@@ -682,10 +682,11 @@ body.night-mode .lantern-trigger {
 
 /* Night Mode Animation */
 body.night-mode {
-    filter: brightness(0.4) contrast(1.2);
-    transition: filter 2s ease;
+    filter: brightness(0.1) contrast(1.1); /* Much darker */
+    background-color: #000; /* Ensure background is black */
+    transition: filter 2s ease, background-color 2s ease;
 }
 
 body:not(.night-mode) {
-    transition: filter 2s ease;
+    transition: filter 2s ease, background-color 2s ease;
 }
