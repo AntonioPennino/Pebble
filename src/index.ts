@@ -89,6 +89,10 @@ function bootstrap(): void {
     }
   }
 
+  // Expose for debugging
+  (window as any).gameService = getGameServiceInstance();
+  (window as any).gameState = gameState;
+
   void syncWithSupabase();
 
   // Diagnostic: log resolved config values to help debug cloud sync setup

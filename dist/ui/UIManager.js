@@ -36,6 +36,7 @@ export class UIManager {
         this.initNamePrompt();
         this.initTutorial();
         this.initUpdateBanner();
+        this.initDenScene();
         this.initKitchenScene();
         this.initHygieneScene();
         this.initGamesScene();
@@ -173,6 +174,21 @@ export class UIManager {
         else {
             void audioManager.stopAmbient();
         }
+    }
+    initDenScene() {
+        const otter = document.getElementById('otterImage');
+        if (!otter)
+            return;
+        otter.addEventListener('click', () => {
+            getGameServiceInstance().sleep();
+            this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
+            // Visual feedback for sleep
+            document.body.classList.add('night-mode');
+            setTimeout(() => {
+                document.body.classList.remove('night-mode');
+            }, 4000);
+            this.notificationUI.showAlert('Sogni d\'oro, Pebble...', 'info');
+        });
     }
     initKitchenScene() {
         const foodItems = document.querySelectorAll('.draggable-item[data-food]');

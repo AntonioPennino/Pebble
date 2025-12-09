@@ -1,5 +1,5 @@
 import { UIManager } from './ui/UIManager.js';
-import { calculateOfflineProgress, getGameStateInstance, syncWithSupabase } from './bootstrap.js';
+import { calculateOfflineProgress, getGameStateInstance, getGameServiceInstance, syncWithSupabase } from './bootstrap.js';
 import { audioManager } from './core/audio.js';
 const uiManager = new UIManager();
 function setupServiceWorker() {
@@ -72,6 +72,9 @@ function bootstrap() {
             uiManager.showGiftModal(offlineProgress.gift);
         }
     }
+    // Expose for debugging
+    window.gameService = getGameServiceInstance();
+    window.gameState = gameState;
     void syncWithSupabase();
     // Diagnostic: log resolved config values to help debug cloud sync setup
     void import('./core/config.js').then(cfg => {

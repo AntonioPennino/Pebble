@@ -659,3 +659,13 @@ body.zen-mode .coins-display {
     height: 100%;
     display: block;
 }
+
+/* Night Mode Animation */
+body.night-mode {
+    filter: brightness(0.4) contrast(1.2);
+    transition: filter 2s ease;
+}
+
+body:not(.night-mode) {
+    transition: filter 2s ease;
+}
