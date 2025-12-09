@@ -68,6 +68,17 @@ export class SupabaseCloudService {
                 }
             }
             const remote = (data ?? null);
+            // Conflict Resolution:
+            // If remote exists and has a NEWER last_login than our local state, 
+            // we should NOT overwrite it. We should return the remote state so local can update.
+            if (remote && remote.last_login) {
+                const remoteDate = new Date(remote.last_login).getTime();
+                // Allow a small buffer (e.g., 1s) for clock differences
+                if (remoteDate > lastLoginDate + 1000) {
+                    console.log('Remote state is newer. Skipping upsert.');
+                    return remote;
+                }
+            }
             const payload = {
                 id: playerId,
                 stats: stats,

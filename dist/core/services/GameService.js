@@ -60,5 +60,15 @@ export class GameService {
     rewardItemPurchase(itemKey) {
         this.gameState.incrementMetric('itemsBought');
         recordEvent(`acquisto:${itemKey}`);
+        // Unlock visual equipment
+        if (itemKey === 'hat_straw') {
+            this.gameState.setEquipped({ hat: true });
+        }
+        else if (itemKey === 'scarf_wool') {
+            this.gameState.setEquipped({ scarf: true });
+        }
+        else if (itemKey === 'glasses_sun') {
+            this.gameState.setEquipped({ sunglasses: true });
+        }
     }
 }
