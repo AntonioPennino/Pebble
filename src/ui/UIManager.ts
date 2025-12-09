@@ -207,11 +207,51 @@ export class UIManager {
         const lantern = document.getElementById('denLantern');
         if (!lantern) return;
 
+        // Force initial audio context resume on user interaction to ensure audio starts
+        document.body.addEventListener('click', () => {
+            if (audioManager['context']?.state === 'suspended') {
+                void audioManager.resume();
+            }
+        }, { once: true });
+
         // Sync initial state from GameState
         let isNight = getGameStateInstance().getIsSleeping();
         if (isNight) {
             document.body.classList.add('night-mode');
+            // If night, play fireplace ambient if in den, or quiet? 
+            // handleSceneChange will handle it on scroll, but initial state?
+            // Let's rely on handleSceneChange triggering on init via intersection observer.
         }
+
+        lantern.addEventListener('click', () => {
+            isNight = !isNight;
+
+            if (isNight) {
+                // Goodnight
+                getGameServiceInstance().sleep();
+                // Renderer updates automatically via subscription
+                // Trigger sleep animation
+                this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
+                document.body.classList.add('night-mode');
+                this.notificationUI.showAlert('Buonanotte, Pebble...', 'info');
+                if (navigator.vibrate) navigator.vibrate(50);
+
+                // Play quiet sound?
+                // Maybe stop birds? handleSceneChange handles "den" -> fireplace.
+                // We could switch track here?
+                // For now relying on scene ambient is safer.
+            } else {
+                // Good morning
+                getGameServiceInstance().wakeUp();
+                document.body.classList.remove('night-mode');
+                this.otterRenderer.triggerAnimation('feed', getGameStateInstance().getEquipped(), () => { });
+                this.notificationUI.showAlert('Buongiorno!', 'info');
+                if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
+
+                // Play happy sound
+                void audioManager.playSFX('happy');
+            }
+        });
 
         lantern.addEventListener('click', () => {
             isNight = !isNight;
@@ -621,6 +661,7 @@ export class UIManager {
 
             if (stackHeight > 300) {
                 this.notificationUI.showAlert('Che equilibrio perfetto...', 'info');
+                void audioManager.playSFX('happy');
             }
         });
     }
@@ -637,6 +678,7 @@ export class UIManager {
         this.otterRenderer.triggerAnimation('feed', equipped, () => { });
 
         if (navigator.vibrate) navigator.vibrate(20);
+        void audioManager.playSFX('feed'); // Crunch sound
 
         if (snack) {
             recordEvent(`cibo:${snack}`);
