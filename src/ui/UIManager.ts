@@ -245,8 +245,8 @@ export class UIManager {
                 this.notificationUI.showAlert('Buongiorno!', 'info');
                 if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
 
-                // Play happy sound
-                void audioManager.playSFX('happy');
+                // Play happy sound with variance
+                void audioManager.playSFX('happy', true);
             }
         });
     }
@@ -384,6 +384,7 @@ export class UIManager {
                             this.notificationUI.showAlert('Che bel bagnetto!', 'info');
                             rubProgress = 0;
                             if (navigator.vibrate) navigator.vibrate(50); // Haptic
+                            void audioManager.playSFX('splash', true);
                         }
                     }
                 }
@@ -621,7 +622,7 @@ export class UIManager {
 
             if (stackHeight > 300) {
                 this.notificationUI.showAlert('Che equilibrio perfetto...', 'info');
-                void audioManager.playSFX('happy');
+                void audioManager.playSFX('happy', true);
             }
         };
 
@@ -672,7 +673,7 @@ export class UIManager {
         this.otterRenderer.triggerAnimation('feed', equipped, () => { });
 
         if (navigator.vibrate) navigator.vibrate(20);
-        void audioManager.playSFX('feed'); // Crunch sound
+        void audioManager.playSFX('feed', true); // Crunch sound
 
         if (snack) {
             recordEvent(`cibo:${snack}`);
