@@ -56,4 +56,20 @@ export class StandardGameRulesService implements IGameRulesService {
         if (value > 100) return 100;
         return Math.round(value * 10) / 10;
     }
+
+    public getDailyReward(day: number): { type: 'seaGlass' | 'item'; value: number | string } {
+        // Cycle every 7 days
+        const cycleDay = ((day - 1) % 7) + 1;
+
+        switch (cycleDay) {
+            case 1: return { type: 'seaGlass', value: 50 };
+            case 2: return { type: 'seaGlass', value: 100 };
+            case 3: return { type: 'seaGlass', value: 150 };
+            case 4: return { type: 'item', value: 'Conchiglia Preziosa' }; // Item placeholder
+            case 5: return { type: 'seaGlass', value: 200 };
+            case 6: return { type: 'seaGlass', value: 300 };
+            case 7: return { type: 'item', value: 'Cappello Avventuriero' }; // Rare item placeholder
+            default: return { type: 'seaGlass', value: 50 };
+        }
+    }
 }

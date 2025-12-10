@@ -26,6 +26,8 @@ interface StoredGameState {
     metrics: GameStats;
     firstLoginDate?: number;
     isSleeping?: boolean; // Persisted sleep state
+    lastDailyBonusClaim?: number;
+    dailyStreak?: number;
 }
 
 export class GameState {
@@ -44,6 +46,8 @@ export class GameState {
     private listeners: Array<() => void> = [];
     private syncTimeout: any = null; // For debounce
     private isSleeping: boolean = false; // Sleep state
+    private lastDailyBonusClaim: number = 0;
+    private dailyStreak: number = 0;
 
     constructor(
         private storageService: IStorageService,
@@ -61,6 +65,8 @@ export class GameState {
         this.equipped = stored.state.equipped;
         this.metrics = stored.state.metrics;
         this.isSleeping = !!stored.state.isSleeping; // Restore sleep state
+        this.lastDailyBonusClaim = stored.state.lastDailyBonusClaim || 0;
+        this.dailyStreak = stored.state.dailyStreak || 0;
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
     }
@@ -139,6 +145,67 @@ export class GameState {
             this.writeToStorage();
             this.notifyListeners();
         }
+    }
+
+    public getDailyBonusStatus(): { canClaim: boolean; currentDay: number; reward?: { type: 'seaGlass' | 'item'; value: number | string } } {
+        const now = Date.now();
+        const last = new Date(this.lastDailyBonusClaim);
+        const today = new Date(now);
+
+        // Reset hours to compare calendar days
+        last.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        const diffTime = today.getTime() - last.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+        if (diffDays === 0) {
+            // Already claimed today
+            return { canClaim: false, currentDay: this.dailyStreak };
+        }
+
+        let nextDay = this.dailyStreak + 1;
+        if (diffDays > 1) {
+            // Missed a day, reset logic? 
+            // Standard user-friendly logic: Reset to 1.
+            nextDay = 1;
+        }
+
+        const reward = this.gameRulesService.getDailyReward(nextDay);
+        return { canClaim: true, currentDay: nextDay, reward };
+    }
+
+    public getDailyStreak(): number {
+        return this.dailyStreak;
+    }
+
+    public getDailyRewardPreview(day: number): { type: 'seaGlass' | 'item'; value: number | string } {
+        return this.gameRulesService.getDailyReward(day);
+    }
+
+    public claimDailyBonus(): { type: 'seaGlass' | 'item'; value: number | string } | null {
+        const status = this.getDailyBonusStatus();
+        if (!status.canClaim || !status.reward) {
+            return null;
+        }
+
+        this.lastDailyBonusClaim = Date.now();
+        this.dailyStreak = status.currentDay;
+
+        if (status.reward.type === 'seaGlass') {
+            const val = typeof status.reward.value === 'number' ? status.reward.value : 0;
+            this.stats.seaGlass += val;
+        } else if (status.reward.type === 'item') {
+            const item = String(status.reward.value);
+            if (!this.inventory.includes(item)) {
+                this.inventory.push(item);
+                this.notifyInventoryChange();
+            }
+        }
+
+        this.writeToStorage();
+        this.notifyListeners(); // Update UI
+        return status.reward;
     }
 
     public setPlayerName(name: string): void {
@@ -407,7 +474,9 @@ export class GameState {
             playerName: this.playerName,
             equipped: { ...this.equipped },
             metrics: { ...this.metrics },
-            isSleeping: this.isSleeping // Save sleep state
+            isSleeping: this.isSleeping, // Save sleep state
+            lastDailyBonusClaim: this.lastDailyBonusClaim,
+            dailyStreak: this.dailyStreak
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
