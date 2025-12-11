@@ -192,16 +192,17 @@ h1 {
 
 /* Draggable Items */
 .draggable-item {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2rem; /* For fallback emojis */
   cursor: grab;
   transition: transform 0.2s;
+  padding: 8px;
 }
 
 .draggable-item:active {
@@ -286,7 +287,11 @@ body.zen-mode .coins-display {
   position: absolute;
   bottom: 120px;
   right: 40px;
-  font-size: 3rem;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
   cursor: pointer;
   transition: transform 0.2s;
@@ -460,9 +465,13 @@ body.zen-mode .coins-display {
 }
 
 .merchant-character {
-  font-size: 5rem;
-  margin-bottom: -20px;
+  width: 300px;
+  height: 300px;
+  margin-bottom: -40px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
   animation: float 3s ease-in-out infinite;
 }
@@ -480,7 +489,12 @@ body.zen-mode .coins-display {
 }
 
 .rug-item {
-  font-size: 2.5rem;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
   cursor: pointer;
   transition: transform 0.2s;
   position: relative;
@@ -667,7 +681,11 @@ body.zen-mode .coins-display {
     position: absolute;
     top: 30px;
     right: 30px;
-    font-size: 4rem; /* Much bigger */
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     transition: transform 0.3s ease, filter 0.3s ease;
     z-index: 1000; /* Ensure on top */
@@ -868,4 +886,15 @@ body.night-mode .lantern-trigger {
 @keyframes slideDown {
     from { transform: translate(-50%, -100%); opacity: 0; }
     to { transform: translate(-50%, 0); opacity: 1; }
+}
+/* Image Icon Utilities */
+.trigger-icon, .item-icon, .merchant-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.merchant-img {
+    object-position: center bottom;
 }

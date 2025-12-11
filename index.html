@@ -36,11 +36,11 @@
         </div>
       </div>
       <div id="journalTrigger" class="journal-trigger" role="button" aria-label="Apri il diario">
-        📔
+        <img src="src/assets/menu-icons/book.png" class="trigger-icon" alt="Diario" />
       </div>
       <!-- The Lantern (Sleep Trigger) -->
       <div id="denLantern" class="lantern-trigger" role="button" aria-label="Spegni la luce">
-        🏮
+        <img src="src/assets/menu-icons/lantern.png" class="trigger-icon" alt="Lanterna" />
       </div>
     </section>
 
@@ -51,8 +51,12 @@
       </div>
       <!-- Floating Context Panel for Food -->
       <div class="context-panel">
-        <div class="draggable-item" draggable="true" data-food="fish">🐟</div>
-        <div class="draggable-item" draggable="true" data-food="berry">🍓</div>
+        <div class="draggable-item" draggable="true" data-food="fish">
+          <img src="src/assets/menu-icons/fish.png" class="item-icon" alt="Pesce" />
+        </div>
+        <div class="draggable-item" draggable="true" data-food="apple">
+          <img src="src/assets/menu-icons/apple.png" class="item-icon" alt="Mela" />
+        </div>
         <div class="draggable-item" draggable="true" data-food="clam">🦪</div>
       </div>
     </section>
@@ -71,13 +75,21 @@
     <section id="gamesPage" class="scene" data-scene="games">
       <div class="merchant-container">
         <!-- The Merchant (Turtle or Beaver) -->
-        <div class="merchant-character">🐢</div> 
+        <div class="merchant-character">
+          <img src="src/assets/menu-icons/merchant.png" class="merchant-img" alt="Mercante" />
+        </div> 
         
         <!-- The Rug (Item Display) -->
         <div class="merchant-rug">
-          <div class="rug-item" data-item="hat_straw" data-cost="50">👒</div>
-          <div class="rug-item" data-item="scarf_wool" data-cost="100">🧣</div>
-          <div class="rug-item" data-item="glasses_sun" data-cost="150">🕶️</div>
+          <div class="rug-item" data-item="hat_straw" data-cost="50">
+            <img src="src/assets/menu-icons/hat.png" class="item-icon" alt="Cappello" />
+          </div>
+          <div class="rug-item" data-item="scarf_wool" data-cost="100">
+            <img src="src/assets/menu-icons/scarf.png" class="item-icon" alt="Sciarpa" />
+          </div>
+          <div class="rug-item" data-item="glasses_sun" data-cost="150">
+            <img src="src/assets/menu-icons/sunglasses.png" class="item-icon" alt="Occhiali" />
+          </div>
         </div>
 
         <!-- Ritual Triggers -->
