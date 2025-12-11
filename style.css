@@ -869,3 +869,33 @@ body.night-mode .lantern-trigger {
     from { transform: translate(-50%, -100%); opacity: 0; }
     to { transform: translate(-50%, 0); opacity: 1; }
 }
+
+/* Seagull (AdMob) */
+.seagull {
+    position: fixed;
+    font-size: 3rem;
+    z-index: 9000;
+    cursor: pointer;
+    transition: transform 0.2s;
+    filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+}
+
+.seagull.hidden {
+    display: none;
+}
+
+.seagull:hover {
+    transform: scale(1.1);
+}
+
+.seagull.flying {
+    animation: flyAcross 20s linear forwards;
+}
+
+@keyframes flyAcross {
+    from { left: -60px; transform: translateY(0); }
+    25% { transform: translateY(-30px); }
+    50% { transform: translateY(0); }
+    75% { transform: translateY(20px); }
+    to { left: 110vw; transform: translateY(-10px); }
+}

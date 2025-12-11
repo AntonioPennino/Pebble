@@ -12,6 +12,7 @@ import { recordEvent } from '../core/analytics.js';
 import { getGameStateInstance, getSettingsStateInstance, getGameServiceInstance } from '../bootstrap.js';
 import { enableNotifications, disableNotifications } from '../core/services/notifications.js';
 import { mountStonePolishingActivity, StonePolishingActivity } from '../features/stonePolishing.js';
+import { Seagull } from './components/Seagull.js';
 
 export class UIManager {
     private hud: HUD;
@@ -19,6 +20,7 @@ export class UIManager {
     private otterRenderer: OtterRenderer;
     private modalManager: ModalManager;
     private notificationUI: NotificationUI;
+    private seagull: Seagull;
     private deferredInstallPrompt: any = null;
     private updateConfirm: (() => void) | null = null;
     private updateDismiss: (() => void) | null = null;
@@ -29,6 +31,7 @@ export class UIManager {
         this.otterRenderer = new OtterRenderer();
         this.modalManager = new ModalManager(this.inventoryView);
         this.notificationUI = new NotificationUI();
+        this.seagull = new Seagull(this.notificationUI);
     }
 
     public init(): void {
