@@ -867,8 +867,8 @@ export class UIManager {
         canvas.addEventListener('mousedown', (e) => startHandler(e.offsetX, e.offsetY));
         canvas.addEventListener('mousemove', (e) => moveHandler(e.offsetX, e.offsetY));
         canvas.addEventListener('mouseup', (e) => {
-            isDragging = false;
             endHandler(e.offsetX, e.offsetY);
+            isDragging = false;
             draw();
         });
 
@@ -888,8 +888,8 @@ export class UIManager {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const t = e.changedTouches[0];
-            isDragging = false;
             endHandler(t.clientX - rect.left, t.clientY - rect.top);
+            isDragging = false;
             draw();
         }); // Missing bracket fix? No, endHandler call matches logic
 
@@ -1007,11 +1007,14 @@ export class UIManager {
         renderBonusUI();
 
         // Auto-show if available
-        if (gameState.getDailyBonusStatus().canClaim) {
+        // Auto-show if available (once per session)
+        const hasSeenBonus = sessionStorage.getItem('pebble_daily_bonus_seen_session');
+        if (gameState.getDailyBonusStatus().canClaim && !hasSeenBonus) {
             // Tiny delay to ensure load
             setTimeout(() => {
                 overlay.classList.remove('hidden');
                 void audioManager.playSFX('pop', true);
+                sessionStorage.setItem('pebble_daily_bonus_seen_session', 'true');
             }, 1000);
         }
     }
