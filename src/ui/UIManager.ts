@@ -1007,14 +1007,16 @@ export class UIManager {
         renderBonusUI();
 
         // Auto-show if available
-        // Auto-show if available (once per session)
-        const hasSeenBonus = sessionStorage.getItem('pebble_daily_bonus_seen_session');
-        if (gameState.getDailyBonusStatus().canClaim && !hasSeenBonus) {
+        // Auto-show if available (once per calendar day, persistent)
+        const today = new Date().toDateString();
+        const lastAutoShow = localStorage.getItem('pebble_daily_bonus_last_shown');
+
+        if (gameState.getDailyBonusStatus().canClaim && lastAutoShow !== today) {
             // Tiny delay to ensure load
             setTimeout(() => {
                 overlay.classList.remove('hidden');
                 void audioManager.playSFX('pop', true);
-                sessionStorage.setItem('pebble_daily_bonus_seen_session', 'true');
+                localStorage.setItem('pebble_daily_bonus_last_shown', today);
             }, 1000);
         }
     }
