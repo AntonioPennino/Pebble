@@ -81,15 +81,9 @@
         
         <!-- The Rug (Item Display) -->
         <div class="merchant-rug">
-          <div class="rug-item" data-item="hat_straw" data-cost="50">
-            <img src="src/assets/menu-icons/hat.png" class="item-icon" alt="Cappello" />
-          </div>
-          <div class="rug-item" data-item="scarf_wool" data-cost="100">
-            <img src="src/assets/menu-icons/scarf.png" class="item-icon" alt="Sciarpa" />
-          </div>
-          <div class="rug-item" data-item="glasses_sun" data-cost="150">
-            <img src="src/assets/menu-icons/sunglasses.png" class="item-icon" alt="Occhiali" />
-          </div>
+            <div class="rug-content">
+                <img src="src/assets/menu-icons/merchant-things.png" id="shopTrigger" class="shop-trigger-img" alt="Negozio" />
+            </div>
         </div>
 
         <!-- Ritual Triggers -->
@@ -214,6 +208,31 @@
       <canvas id="fireflyCanvas" class="firefly-canvas"></canvas>
       <div class="current-instruction" style="color: #B2EBF2;">Unisci le stelle</div>
       <button id="closeFireflyRitual" class="close-ritual-btn" style="color: #E0F7FA;">✕</button>
+    </div>
+  </div>
+
+  <!-- Shop Modal Overlay -->
+  <div id="shopOverlay" class="overlay hidden">
+    <div class="daily-bonus-container paper-texture"> <!-- Reuse container style -->
+      <h2>Il Mercante</h2>
+      <p class="bonus-subtitle">Oggetti unici per Pebble</p>
+      
+      <div class="shop-grid">
+        <div class="shop-item" data-item="hat_straw" data-cost="50">
+          <img src="src/assets/menu-icons/hat.png" alt="Cappello" />
+          <span class="shop-price">50 💎</span>
+        </div>
+        <div class="shop-item" data-item="scarf_wool" data-cost="100">
+          <img src="src/assets/menu-icons/scarf.png" alt="Sciarpa" />
+          <span class="shop-price">100 💎</span>
+        </div>
+        <div class="shop-item" data-item="glasses_sun" data-cost="150">
+          <img src="src/assets/menu-icons/sunglasses.png" alt="Occhiali" />
+          <span class="shop-price">150 💎</span>
+        </div>
+      </div>
+
+      <button id="closeShopBtn" class="close-ritual-btn">✕</button>
     </div>
   </div>
 

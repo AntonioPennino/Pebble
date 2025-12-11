@@ -192,8 +192,8 @@ h1 {
 
 /* Draggable Items */
 .draggable-item {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-md);
   display: flex;
@@ -286,9 +286,9 @@ body.zen-mode .coins-display {
 .journal-trigger {
   position: absolute;
   bottom: 120px;
-  right: 40px;
-  width: 96px;
-  height: 96px;
+  right: 20px;
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -467,7 +467,7 @@ body.zen-mode .coins-display {
 .merchant-character {
   width: 300px;
   height: 300px;
-  margin-bottom: -40px;
+  margin-bottom: 20px; /* Lifted up */
   z-index: 2;
   display: flex;
   align-items: center;
@@ -488,16 +488,65 @@ body.zen-mode .coins-display {
   z-index: 1;
 }
 
-.rug-item {
-  width: 80px;
-  height: 80px;
+.rug-content {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.shop-trigger-img {
+  width: 200px; /* Size of the pile of things */
+  max-width: 100%;
   cursor: pointer;
   transition: transform 0.2s;
-  position: relative;
+}
+
+.shop-trigger-img:hover {
+  transform: scale(1.05);
+}
+
+/* Shop Modal Styles */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.shop-item {
+  background: #FFF;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  border: 2px solid transparent;
+}
+
+.shop-item:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-teal);
+}
+
+.shop-item img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.shop-price {
+  font-weight: bold;
+  color: var(--text-ink);
+  background: var(--accent-sand);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
 }
 
 .rug-item:hover {
@@ -681,8 +730,8 @@ body.zen-mode .coins-display {
     position: absolute;
     top: 30px;
     right: 30px;
-    width: 96px;
-    height: 96px;
+    width: 72px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;

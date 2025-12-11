@@ -682,7 +682,10 @@ export class UIManager {
     }
 
     private initMerchant(): void {
-        const rugItems = document.querySelectorAll('.rug-item');
+        const shopTrigger = $('shopTrigger');
+        const shopOverlay = $('shopOverlay');
+        const closeShopBtn = $('closeShopBtn');
+        const shopItems = document.querySelectorAll('.shop-item');
         const seaGlassDisplay = $('seaGlassCount');
 
         const updateDisplay = () => {
@@ -695,25 +698,37 @@ export class UIManager {
         updateDisplay();
         getGameStateInstance().subscribe(updateDisplay);
 
-        rugItems.forEach(item => {
+        // Open Shop
+        shopTrigger?.addEventListener('click', () => {
+            shopOverlay?.classList.remove('hidden');
+        });
+
+        // Close Shop
+        closeShopBtn?.addEventListener('click', () => {
+            shopOverlay?.classList.add('hidden');
+        });
+
+        // Purchase Logic
+        shopItems.forEach(item => {
             item.addEventListener('click', () => {
                 const cost = Number((item as HTMLElement).dataset.cost);
                 const itemKey = (item as HTMLElement).dataset.item;
 
                 if (!cost || !itemKey) return;
 
-                if (getGameServiceInstance().spendCoins(cost)) { // spendCoins now uses seaGlass
+                if (getGameServiceInstance().spendCoins(cost)) {
                     getGameServiceInstance().rewardItemPurchase(itemKey);
                     this.notificationUI.showAlert(`Hai ottenuto: ${itemKey}!`, 'info');
-                    // Visual feedback?
+
+                    // Visual feedback
+                    item.classList.add('purchased');
                     (item as HTMLElement).style.opacity = '0.5';
-                    (item as HTMLElement).style.pointerEvents = 'none';
+                    (item as HTMLElement).style.pointerEvents = 'none'; // Disable further clicks
                 } else {
                     this.notificationUI.showAlert('Non hai abbastanza Vetri di Mare.', 'warning');
                 }
             });
         });
-
     }
 
     private fireflyAnimationId: number | null = null;
