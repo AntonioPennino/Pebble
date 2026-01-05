@@ -1340,33 +1340,60 @@ export class UIManager {
             setTimeout(resetBook, 500); // Reset after close
         });
 
-        // Flip Logic (Real Book)
-        pages.forEach((page, index) => {
-            page.addEventListener('click', (e) => {
-                // Ignore interactions with form inputs inside the page
-                if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'LABEL') {
-                    return;
-                }
+        // Swipe Logic (Touch)
+        let touchStartX = 0;
 
-                const rect = (page as HTMLElement).getBoundingClientRect();
-                const x = (e as MouseEvent).clientX - rect.left;
-                const width = rect.width;
-                const isLeftClick = x < width * 0.3;
+        journalBook.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
 
-                if (isLeftClick) {
-                    // Go Back: Unflip previous page
-                    if (index > 0) {
-                        pages[index - 1].classList.remove('flipped');
-                        if (navigator.vibrate) navigator.vibrate(10);
-                    }
-                } else {
-                    // Go Forward: Flip current page
-                    if (index < pages.length - 1) {
-                        page.classList.add('flipped');
-                        if (navigator.vibrate) navigator.vibrate(10);
-                    }
+        journalBook.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+
+            // Threshold for swipe (avoid accidental taps)
+            if (Math.abs(diff) < 50) return;
+
+            if (diff > 0) {
+                // Swipe Left -> Next Page
+                if (currentPage < pages.length - 1) {
+                    currentPage++;
+                    updatePageClasses();
                 }
-            });
+            } else {
+                // Swipe Right -> Prev Page
+                if (currentPage > 0) {
+                    currentPage--;
+                    updatePageClasses();
+                }
+            }
+        });
+
+        // Click Logic for Desktop (Safety: Ignore buttons/inputs)
+        // We attach to the book container, not individual pages, to handle clicks globally but filtering targets
+        journalBook.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            // Ignore if clicking interactive elements
+            if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.tagName === 'LABEL' || target.closest('.toggle-control')) {
+                return;
+            }
+            // For desktop users, allow clicking on the right half to go next, left half to go prev
+            const rect = journalBook.getBoundingClientRect();
+            const x = (e as MouseEvent).clientX - rect.left;
+            const width = rect.width;
+            const isLeftClick = x < width * 0.3; // Left 30% for prev, rest for next
+
+            if (isLeftClick) {
+                if (currentPage > 0) {
+                    currentPage--;
+                    updatePageClasses();
+                }
+            } else {
+                if (currentPage < pages.length - 1) {
+                    currentPage++;
+                    updatePageClasses();
+                }
+            }
         });
 
         // Zen Mode Toggle
@@ -1392,37 +1419,6 @@ export class UIManager {
             playerNameInput.addEventListener('change', (e) => {
                 const name = (e.target as HTMLInputElement).value;
                 getGameStateInstance().setPlayerName(name);
-            });
-        }
-
-        // Backup Logic
-        const idDisplay = $('playerIdDisplay') as HTMLInputElement;
-        const copyBtn = $('copyIdBtn');
-        const restoreBtn = $('restoreSaveBtn');
-
-        if (idDisplay) idDisplay.value = getGameStateInstance().getPlayerId();
-
-        if (copyBtn && idDisplay) {
-            copyBtn.addEventListener('click', () => {
-                idDisplay.select();
-                navigator.clipboard.writeText(idDisplay.value);
-                this.notificationUI.showAlert('ID copiato negli appunti!', 'success');
-            });
-        }
-
-        if (restoreBtn) {
-            restoreBtn.addEventListener('click', async () => {
-                const code = prompt('Inserisci il codice di recupero (ID):\nATTENZIONE: Questo sovrascriverà i dati attuali!');
-                if (code) {
-                    const result = await getGameStateInstance().recoverFromCloudCode(code);
-                    if (result.ok) {
-                        alert('Salvataggio recuperato con successo! Il gioco verrà ricaricato.');
-                        window.location.reload();
-                    } else {
-                        const msg = result.reason === 'not_found' ? 'Codice non trovato' : 'Errore nel recupero';
-                        this.notificationUI.showAlert(msg, 'error');
-                    }
-                }
             });
         }
 
