@@ -1,184 +1,92 @@
 # Pebble 🦦 — Gioco di cura della lontra
 
-Un adorabile gioco web per prendersi cura di una lontra, ispirato a Pou ma con un'estetica più tenera e meno inquietante.
+Un adorabile gioco web per prendersi cura di una lontra, ispirato a Pou ma con un'estetica più tenera, rilassante e naturale ("Zen-core").
 
-**🎮 [GIOCA ORA](https://antoniopennino.github.io/Pebble/)** | 📱 Installabile su mobile come app!
+**🎮 [GIOCA ORA](https://antoniopennino.github.io/Pebble/)** | 📱 Installabile su Android & iOS via PWA o Native
 
-## ✨ Caratteristiche
+## ✨ Nuove Caratteristiche
 
-- **Lontra interattiva** in SVG con animazioni morbide e stati emotivi dinamici
-- **Statistiche in tempo reale** (fame, felicità, pulizia, energia) con alert visivi e sonori
-- **Mini-gioco pesca** a tempo per guadagnare monete e sbloccare ricompense
-- **Tutorial guidato** al primo avvio con sovrapposizioni contestuali
-- **Analytics locali opt-in** per tracciare le interazioni principali senza inviare dati esterni
-- **PWA installabile** con service worker e prompt di aggiornamento automatico
-- **Backup locali + Cloud sync** tramite Supabase con codice di recupero
+Pebble è cresciuto molto! Oltre alla cura di base, ora include:
+
+- **📔 Diario & Statistiche**: Un nuovo hub centrale per monitorare i progressi, l'umore (Soul System) e l'inventario. Include la **Zen Mode** per nascondere l'interfaccia e godersi l'atmosfera.
+- **✨ 3 Nuovi Rituali (Minigiochi)**:
+  - **L'Equilibrio (Stone Stacking)**: Impila le pietre zen cercando stabilità e armonia.
+  - **Le Costellazioni**: Unisci le stelle nel cielo notturno per formare figure luminose.
+  - **La Corrente**: Interagisci con il flusso dell'acqua in un'esperienza meditativa.
+- **🎒 Il Mercante Itinerante**: Tieni d'occhio il fiume! Un mercante appare occasionalmente per vendere accessori unici (Cappelli di paglia, Sciarpe, Occhiali da sole) in cambio di "Vetri di Mare".
+- **🎁 Bonus Giornaliero**: Torna ogni giorno per riscattare ricompense crescenti e oggetti speciali.
+- **☁️ Cloud Sync Migliorato**: Sincronizzazione affidabile con Supabase per non perdere mai i progressi tra dispositivi.
+- **📱 Supporto Nativo (Capacitor)**: Il progetto è ora configurato per generare app native Android e iOS reali, oltre alla versione PWA.
 
 ## 🕹️ Gameplay
 
-1. Avvia il gioco e segui il tutorial per imparare le azioni base.
-2. Usa i pulsanti nel menù inferiore per nutrire, giocare, lavare o far riposare la lontra.
-3. Avvia il mini-gioco dalla sezione *Gioca*: cattura i pesci che appaiono sullo schermo entro 10 secondi.
-4. Accedi alla sezione statistiche per controllare lo storico e monitorare gli avvisi critici.
-5. Le statistiche decadono lentamente: pianifica le azioni per mantenere la lontra felice.
+1. **Cura**: Nutri, lava e gioca con Pebble per mantenere alto il suo umore. Le espressioni cambiano dinamicamente!
+2. **Ciclo Giorno/Notte**: Interagisci con la lanterna nella tana per mettere a dormire Pebble.
+3. **Esplora**: Scorri tra le scene (Tana, Cucina, Fiume, Giochi) per scoprire attività diverse.
+4. **Colleziona**: Trova "Vetri di Mare" (valuta) e oggetti rari tramite i rituali e il mercante.
 
-## 📱 Mobile e PWA
+## 📱 Mobile: PWA vs Nativo
 
-- Installabile direttamente dal browser (Chrome, Edge, Safari mobile) tramite banner PWA.
-- Supporto full-screen, caching offline e prompt di aggiornamento quando esce una nuova versione.
-- Guida completa per Android/iOS in [`MOBILE.md`](MOBILE.md).
+Hai due modi per giocare su mobile:
 
-## 🧱 Struttura progetto
+1. **PWA (Consigliato per iniziare)**: Apri il sito su Chrome/Safari e premi "Aggiungi a Schermata Home". Funziona offline e a schermo intero.
+2. **App Nativa (Capacitor)**: Per gli sviluppatori, è possibile compilare `.apk` e `.ipa` reali usando Capacitor.
+   
+👉 **Vedi la guida completa [MOBILE.md](MOBILE.md) per i dettagli di installazione e build.**
+
+## 🧱 Struttura Aggiornata
 
 ```
 Pebble/
-├── index.html               # Shell dell'app, overlay tutorial, include dist/index.js
-├── style.css                # Stili responsive, layout mobile, animazioni
-├── sw.js                    # Service worker con cache versionata e skipWaiting
-├── manifest.json            # PWA manifest con scope GitHub Pages
-├── dist/                    # Output TypeScript (ES modules pronti per il browser)
-│   ├── index.js             # Bootstrap UI, eventi service worker
-│   ├── state.js             # Stato persistente e tick logica
-│   ├── ui.js                # Rendering, navigazione, alert
-│   ├── gameActions.js       # Azioni principali e ricompense
-│   ├── minigame.js          # Logica mini-gioco pesca
-│   ├── audio.js             # Effetti Web Audio
-│   └── analytics.js         # Tracker eventi opzionale
-├── src/                     # Sorgenti TypeScript equivalenti
-│   └── ...
-├── tests/basic.spec.ts      # Smoke test Playwright
-├── playwright.config.ts     # Config Playwright con web server integrato
-├── tsconfig.json            # Config TypeScript (moduleResolution bundler, outDir dist)
-├── package.json             # Script npm per build, serve e test
-├── CHANGELOG.md             # Cronologia versioni
-├── README.md                # Questa documentazione
-├── MOBILE.md                # Istruzioni installazione mobile native/PWA
-└── LICENSE                  # CC BY-NC-ND 4.0
+├── assets/                  # Immagini, icone e suoni
+├── src/
+│   ├── core/                # Logica di gioco (GameState, Audio, Analytics)
+│   ├── features/            # Logica minigiochi (Pesca, Stone Polishing*)
+│   ├── ui/                  # Gestione Interfaccia
+│   │   ├── components/      # Componenti modulari (HUD, Modal, Renderer)
+│   │   └── UIManager.ts     # Orchestrator principale della UI
+│   ├── bootstrap.ts         # Inizializzazione servizi
+│   └── index.ts             # Entry point
+├── android/ & ios/          # Progetti nativi Capacitor
+├── dist/                    # Output build
+├── index.html               # Entry point applicazione
+├── MOBILE.md                # Guida deployment mobile
+└── package.json             # Dipendenze (incluso @capacitor)
 ```
 
-## 🛠️ Ambiente di sviluppo
+## 🛠️ Sviluppo Locale
+
+Il progetto usa **TypeScript** e **Vite** (o script custom) per la build.
 
 ```powershell
-# installa le dipendenze
+# Installa dipendenze
 npm install
 
-# compila TypeScript in dist/
+# Avvia server di sviluppo locale
+npm run serve
+# oppure
+npm run dev
+
+# Compila TypeScript e asset per produzione
 npm run build
 
-# avvia un server statico locale (http://localhost:4173)
-npm run serve
-
-# esegui gli smoke test end-to-end
-npm test
-
-# verifica che TypeScript compili senza generare output
-npm run lint
+# Build mobile (dopo aver configurato l'ambiente Android/iOS)
+npx cap sync
+npx cap open android
 ```
 
-## ☁️ Cloud sync (Supabase)
+## ☁️ Cloud Sync (Supabase)
 
-La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano free sufficiente per i salvataggi compressi).
+La sincronizzazione salva i dati nel cloud in modo sicuro e anonimo.
+Per abilitarla, crea un file `config.js` (basato su `config.example.js`) con le tue chiavi Supabase.
+Il gioco fornisce un **Codice di Recupero** nel Diario: salvalo per ripristinare i dati su altri dispositivi.
 
-1. Crea un progetto su [Supabase](https://supabase.com) e annota `PROJECT_URL` e `ANON_KEY`.
-2. Nella sezione SQL esegui:
+## 📄 Licenza
 
-	 ```sql
-	 create table if not exists pebble_game_state (
-		 id text primary key,
-		 stats jsonb not null,
-		 last_login timestamptz,
-		 inventory text[] not null default '{}'::text[],
-		 updated_at timestamptz not null default timezone('utc', now())
-	 );
-
-	 alter table pebble_game_state enable row level security;
-
-	 create policy "anon upsert" on pebble_game_state
-		 for insert with check (auth.role() = 'anon');
-
-	 create policy "anon update" on pebble_game_state
-		 for update using (auth.role() = 'anon')
-		 with check (auth.role() = 'anon');
-
-	 create policy "anon select" on pebble_game_state
-		 for select using (auth.role() = 'anon');
-
-	 create policy "anon delete" on pebble_game_state
-		 for delete using (auth.role() = 'anon');
-	 ```
-
-	 > Ogni salvataggio è identificato da un codice casuale generato sul dispositivo. Copialo e custodiscilo: è l'unico modo per ripristinare una lontra dopo aver svuotato i dati del browser.
-
-3. Copia `config.example.js` in `config.js` (ignorato da git) e incolla le tue chiavi:
-
-	 ```js
-	 window.PEBBLE_CONFIG = {
-		 supabaseUrl: "https://<YOUR-ID>.supabase.co",
-		 supabaseAnonKey: "ey..."
-	 };
-	 ```
-
-4. Rifai la build (`npm run build`) e apri l'app: nella sezione **Statistiche → Impostazioni** troverai la card “Salvataggi Supabase”.
-
-Pebble mostra il tuo codice cloud e un pulsante **Copia**: annotalo (anche su carta) perché non richiede nessuna registrazione utente. Se reinstalli il gioco o svuoti la cronologia, incolla quel codice nel modulo “Collega” e i dati verranno recuperati dal progetto Supabase. Puoi comunque esportare un backup manuale JSON per ulteriore sicurezza.
-
-## 🤖 Test automatici
-
-I test Playwright ripuliscono automaticamente `localStorage`, mostrano il tutorial
-e verificano il corretto avvio del mini-gioco. In esecuzione locale il service worker
-non viene registrato: è normale vedere un warning 404 durante i test.
-
-## 🎯 Differenze da Pou
-
-| Aspetto | Pou | Pebble |
-|---------|-----|-----------|
-| Design | Alieno marrone | Lontra naturalistica |
-| Espressioni | Semplici | 4 emozioni con morfing SVG |
-| Palette | Scura, satura | Calda, pastello |
-| Animazioni | Basilari | Fluide con cubic-bezier |
-| Audio | File pre-registrati | Procedurali Web Audio |
-| Mobile | App nativa | PWA installabile |
-| Codice | Proprietario | Open source (protetto) |
-
-## 📄 Licenza e Copyright
-
-**Copyright © 2025 Antonio Pennino - Tutti i diritti riservati**
-
-Questo progetto è distribuito sotto licenza **Creative Commons BY-NC-ND 4.0**:
-- ✅ **Puoi**: condividere e usare per scopi personali/educativi
-- ❌ **Non puoi**: usarlo commercialmente, modificarlo o venderlo senza permesso scritto
-- 📧 **Per licenze commerciali**: contatta l'autore
-
-Il codice, la grafica SVG della lontra e il concept sono proprietà intellettuale protetta.
-
-Vedi il file [`LICENSE`](LICENSE) per i termini completi.
-
-## 🤝 Contribuire
-
-Per contribuire:
-1. Apri una Issue descrivendo la tua idea
-2. Aspetta l'approvazione prima di fare modifiche
-3. Le PR devono rispettare lo stile di codice esistente
-4. Ogni contributo rimane sotto la licenza CC BY-NC-ND 4.0
-
-## 🐛 Bug Report
-
-Hai trovato un bug? Apri una Issue su GitHub con:
-- Browser e versione
-- Sistema operativo
-- Passi per riprodurre il problema
-- Screenshot se possibile
-
-## 📞 Contatti
-
-- **GitHub**: [@AntonioPennino](https://github.com/AntonioPennino)
-- **Repository**: [Pebble](https://github.com/AntonioPennino/Pebble)
-- **Demo live**: [https://antoniopennino.github.io/Pebble/](https://antoniopennino.github.io/Pebble/)
+**Copyright © 2025 Antonio Pennino**
+Distribuito sotto licenza **CC BY-NC-ND 4.0**.
+Vedi `LICENSE` per i dettagli.
 
 ---
 
-**Buon divertimento con la tua lontra! 🦦💙**
-
-*Creato con ❤️ per chi ama gli animali carini e i giochi rilassanti*
-
-> ⚠️ **Nota legale**: Pebble è un progetto originale protetto da copyright. L'uso commerciale, la copia del codice o delle grafiche senza autorizzazione è vietato. Per collaborazioni commerciali, contattare l'autore.
+*Creato con 🦦 e ❤️ per chi ama i giochi slow-life.*
