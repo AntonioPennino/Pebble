@@ -1319,49 +1319,62 @@ export class UIManager {
     private initJournal(): void {
         const trigger = $('journalTrigger');
         const overlay = $('journalOverlay');
-        const closeBtn = $('journalCloseBtn'); // Using 'journalCloseBtn' as per existing HTML
+        const closeBtn = $('journalCloseBtn');
+        const journalBook = document.querySelector('.journal-book') as HTMLElement;
         const pages = document.querySelectorAll('.journal-page');
 
-        if (!trigger || !overlay || !closeBtn) return;
+        if (!trigger || !overlay || !closeBtn || !journalBook) return;
+
+        let currentPage = 0;
+        const updatePageClasses = () => {
+            pages.forEach((page, index) => {
+                const el = page as HTMLElement;
+                if (index < currentPage) {
+                    el.classList.add('flipped');
+                } else {
+                    el.classList.remove('flipped');
+                }
+            });
+        };
 
         // Open
         trigger.addEventListener('click', () => {
             overlay.classList.remove('hidden');
-            this.updateJournalStats(); // Refresh stats on open
+            this.updateJournalStats();
         });
 
         const resetBook = () => {
-            pages.forEach(p => p.classList.remove('flipped'));
+            currentPage = 0;
+            updatePageClasses();
         };
 
         // Close
         closeBtn.addEventListener('click', () => {
             overlay.classList.add('hidden');
-            setTimeout(resetBook, 500); // Reset after close
+            setTimeout(resetBook, 500);
         });
 
         // Swipe Logic (Touch)
         let touchStartX = 0;
 
-        journalBook.addEventListener('touchstart', (e) => {
+        journalBook.addEventListener('touchstart', (e: TouchEvent) => {
             touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
 
-        journalBook.addEventListener('touchend', (e) => {
+        journalBook.addEventListener('touchend', (e: TouchEvent) => {
             const touchEndX = e.changedTouches[0].screenX;
             const diff = touchStartX - touchEndX;
 
-            // Threshold for swipe (avoid accidental taps)
             if (Math.abs(diff) < 50) return;
 
             if (diff > 0) {
-                // Swipe Left -> Next Page
+                // Next
                 if (currentPage < pages.length - 1) {
                     currentPage++;
                     updatePageClasses();
                 }
             } else {
-                // Swipe Right -> Prev Page
+                // Prev
                 if (currentPage > 0) {
                     currentPage--;
                     updatePageClasses();
@@ -1369,21 +1382,19 @@ export class UIManager {
             }
         });
 
-        // Click Logic for Desktop (Safety: Ignore buttons/inputs)
-        // We attach to the book container, not individual pages, to handle clicks globally but filtering targets
-        journalBook.addEventListener('click', (e) => {
+        // Click Logic for Desktop
+        journalBook.addEventListener('click', (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            // Ignore if clicking interactive elements
             if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.tagName === 'LABEL' || target.closest('.toggle-control')) {
                 return;
             }
-            // For desktop users, allow clicking on the right half to go next, left half to go prev
-            const rect = journalBook.getBoundingClientRect();
-            const x = (e as MouseEvent).clientX - rect.left;
-            const width = rect.width;
-            const isLeftClick = x < width * 0.3; // Left 30% for prev, rest for next
 
-            if (isLeftClick) {
+            const rect = journalBook.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const width = rect.width;
+
+            // Left 30% = prev, Rest = next
+            if (x < width * 0.3) {
                 if (currentPage > 0) {
                     currentPage--;
                     updatePageClasses();
