@@ -289,12 +289,20 @@ export class UIManager {
         }
     }
 
-    private handleTouchDrag(source: HTMLElement, touch: Touch, scene: 'kitchen' | 'hygiene' | 'stone', onDrop?: (elementUnder: Element | null) => void): void {
+    private handleTouchDrag(
+        source: HTMLElement,
+        touch: Touch,
+        scene: string,
+        onDrop?: (target: Element | null, x?: number, y?: number) => void
+    ): void {
         const ghost = source.cloneNode(true) as HTMLElement;
         ghost.style.position = 'fixed';
-        ghost.style.zIndex = '1000';
+        ghost.classList.add('ghost-drag'); // Use CSS class for styling
+        ghost.style.width = `${source.offsetWidth}px`;
+        ghost.style.height = `${source.offsetHeight}px`;
         ghost.style.opacity = '0.8';
-        ghost.style.pointerEvents = 'none';
+        ghost.style.pointerEvents = 'none'; // Essential for elementFromPoint
+        ghost.style.zIndex = '9999';
         document.body.appendChild(ghost);
 
         const updateGhost = (x: number, y: number) => {
@@ -304,8 +312,9 @@ export class UIManager {
         updateGhost(touch.clientX, touch.clientY);
 
         const moveHandler = (e: TouchEvent) => {
-            e.preventDefault(); // Prevent scrolling while dragging
-            updateGhost(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault(); // Prevent scrolling
+            const t = e.touches[0];
+            updateGhost(t.clientX, t.clientY);
         };
 
         const endHandler = (e: TouchEvent) => {
@@ -318,7 +327,7 @@ export class UIManager {
             const elementUnder = document.elementFromPoint(changedTouch.clientX, changedTouch.clientY);
 
             if (onDrop) {
-                onDrop(elementUnder);
+                onDrop(elementUnder, changedTouch.clientX, changedTouch.clientY);
                 return;
             }
 
@@ -599,18 +608,11 @@ export class UIManager {
             balanceScore = 0;
         };
 
-        const placeStone = (size: string) => {
+        const placeStone = (size: string, manualOffset?: number) => {
             const newStone = document.createElement('div');
             newStone.classList.add('stone', 'stacked-stone');
 
-            // Asset based on size? Ideally yes, but we only have 'rock.png' icon or emoji.
-            // Let's stick to emoji or if we had assets we'd use them.
-            // The task was replacing Menu Emojis. The stones themselves are still styled <div>s with emojis in previous code.
-            // Let's keep emoji for the stone *visual* inside the div for now, or use the rock.png?
-            // "rock.png" is a singular icon. Let's use the rock.png as background?
-            // User put `rock.png` in menu. Let's try to use `rock.png` here for consistency if easy.
-            // Actually, let's stick to the emoji 🪨 or an image tag if we want.
-            // For now, keeping logic focused on physics.
+            // Use rock.png asset
             newStone.textContent = '';
             const img = document.createElement('img');
             img.src = 'src/assets/menu-icons/rock.png';
@@ -639,45 +641,57 @@ export class UIManager {
             newStone.style.justifyContent = 'center';
 
             // Physics / Offset
-            // Make offset a bit more random/dangerous
-            const offset = (Math.random() - 0.5) * 50; // Range -25 to +25
+            // If manualOffset is provided (Input Driven), use it.
+            // Ensure snap not too exact to center if user intends it, but user logic wants "my placement".
+            // Clamp manualOffset to avoid flying off screen completely?
+            // dropZone width is flexible? dropZone visually is `stone-drop-zone`.
+            let offset = 0;
+            if (typeof manualOffset === 'number') {
+                offset = manualOffset;
+            } else {
+                // Fallback to random if dropped via keyboard or unknown?
+                offset = (Math.random() - 0.5) * 50;
+            }
 
             // Calculate new balance
-            // Instability increases as we go higher (lever arm effect?)
-            // Simplified: Add (offset * weight).
             balanceScore += offset * weight;
 
             // Visual positioning
             newStone.style.bottom = `${stackHeight}px`;
             newStone.style.left = `calc(50% + ${offset}px)`;
 
-            // Rotation reflects current instability
-            const lean = balanceScore / 10; // Simple fallback
+            // Rotation reflects instability
+            const lean = balanceScore / 10;
             newStone.style.transform = `translateX(-50%) rotate(${lean}deg)`;
 
             dropZone.appendChild(newStone);
 
             // Check collapse
             if (Math.abs(balanceScore) > BALANCE_THRESHOLD) {
-                // COLLAPSE!
+                // COLLAPSE VISUALS
                 if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-                void audioManager.playSFX('splash', true); // Or 'thud'
+                void audioManager.playSFX('splash', true);
                 this.notificationUI.showAlert('Crollato!', 'error');
 
-                // Visual collapse effect (simple timeout reset)
+                // Animate falling
+                const stones = dropZone.querySelectorAll('.stacked-stone');
+                stones.forEach((s) => {
+                    (s as HTMLElement).style.transition = 'transform 0.5s ease-in, top 0.5s ease-in';
+                    (s as HTMLElement).style.transform += ` translateY(500px) rotate(${Math.random() * 360}deg)`;
+                    (s as HTMLElement).style.opacity = '0';
+                });
+
                 setTimeout(() => {
                     resetStack();
-                }, 800);
+                }, 600);
                 return;
             }
 
-            stackHeight += height * 0.8; // Overlap slightly
+            stackHeight += height * 0.8;
 
             if (navigator.vibrate) navigator.vibrate(20);
 
             if (stackHeight > 300) {
-                // High stack!
-                // Maybe check balance for bonus?
                 if (Math.abs(balanceScore) < 50) {
                     this.notificationUI.showAlert('Equilibrio Zen!', 'success');
                 }
@@ -697,9 +711,14 @@ export class UIManager {
                 const touchEvent = e as TouchEvent;
                 touchEvent.preventDefault();
                 const size = (stone as HTMLElement).dataset.size || 'medium';
-                this.handleTouchDrag(stone as HTMLElement, touchEvent.touches[0], 'stone', (elementUnder) => {
+                this.handleTouchDrag(stone as HTMLElement, touchEvent.touches[0], 'stone', (elementUnder, x, y) => {
                     if (elementUnder && (elementUnder === dropZone || dropZone.contains(elementUnder))) {
-                        placeStone(size);
+                        // Calculate offset
+                        const rect = dropZone.getBoundingClientRect();
+                        const centerX = rect.left + rect.width / 2;
+                        const dropX = x ?? centerX;
+                        const offset = dropX - centerX;
+                        placeStone(size, offset);
                     }
                 });
             });
@@ -715,7 +734,13 @@ export class UIManager {
             const source = e.dataTransfer?.getData('source');
 
             if (source !== 'stone' || !size) return;
-            placeStone(size);
+
+            // Calculate Offset
+            const rect = dropZone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const offset = e.clientX - centerX;
+
+            placeStone(size, offset);
         });
     }
 
