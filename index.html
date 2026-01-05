@@ -119,67 +119,62 @@
       <button id="journalCloseBtn" class="journal-close">✕</button>
       
       <!-- Page 1: Memories (Stats) -->
-      <div class="journal-page active" data-page="memories">
+      <div class="journal-page" data-page="memories" style="z-index: 3;">
         <h2>Ricordi</h2>
-        <div class="polaroid-grid">
-          <div class="polaroid">
-            <div class="polaroid-img" style="background-color: #eee;">🦦</div>
-            <span class="polaroid-caption">Giorni insieme: <span id="daysCount">12</span></span>
+        <div class="journal-content">
+          <div class="stat-row">
+            <span>Giorni nel Fiume:</span>
+            <span id="statDays">0</span>
           </div>
-        </div>
-        <div class="stats-handwritten">
-          <p>Felicità: <span id="journalHappy">Alta</span></p>
-          <p>Pancia: <span id="journalHunger">Piena</span></p>
-        </div>
-        <div class="page-nav">
-          <span>1/3</span>
-          <button class="next-page-btn" data-target="calm">→</button>
+          <div class="stat-row">
+            <span>Giochi Fatti:</span>
+            <span id="statGames">0</span>
+          </div>
+          <div class="stat-row">
+            <span>Pesci Presi:</span>
+            <span id="statFish">0</span>
+          </div>
+          <div class="stat-row">
+            <span>Oggetti Raccolti:</span>
+            <span id="statItems">0</span>
+          </div>
         </div>
       </div>
 
-      <!-- Page 2: Calm (Settings) -->
-      <div class="journal-page hidden" data-page="calm">
-        <h2>La Calma</h2>
-        <div class="settings-handwritten">
-          <label class="checkbox-handwritten">
-            <input type="checkbox" id="zenModeToggle">
-            <span class="checkmark"></span>
-            Zen Mode (Nascondi tutto)
-          </label>
-          <label class="checkbox-handwritten">
+      <!-- Page 2: Backpack (Inventory/Settings) -->
+      <div class="journal-page" data-page="backpack" style="z-index: 2;">
+        <h2>Zaino</h2>
+        <div class="inventory-grid" id="journalInventory">
+          <!-- Filled by JS -->
+        </div>
+        
+        <div class="settings-mini-panel" style="margin-top: 15px;">
+          <h3>Opzioni</h3>
+          <label class="toggle-control">
             <input type="checkbox" id="musicToggle" checked>
             <span class="checkmark"></span>
             Suoni della natura
           </label>
           
-          <div class="backup-section" style="margin-top: 20px; border-top: 1px dashed #A1887F; padding-top: 10px;">
+          <div class="backup-section" style="margin-top: 15px; border-top: 1px dashed #A1887F; padding-top: 10px;">
             <p style="font-size: 0.9em; color: #5D4037; margin-bottom: 5px;">Salvataggio Cloud:</p>
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <div style="display: flex; gap: 5px; margin-bottom: 5px;">
               <input type="text" id="playerIdDisplay" readonly value="Caricamento..." style="flex: 1; padding: 5px; border: 1px solid #D7CCC8; border-radius: 5px; font-family: monospace; background: #EFEBE9; color: #5D4037;">
               <button id="copyIdBtn" class="action-btn small-btn">Copia</button>
             </div>
             <button id="restoreSaveBtn" class="action-btn small-btn" style="width: 100%; background: #D7CCC8; color: #3E2723;">Ripristina da ID</button>
           </div>
         </div>
-        <div class="page-nav">
-          <button class="prev-page-btn" data-target="memories">←</button>
-          <span>2/3</span>
-          <button class="next-page-btn" data-target="bond">→</button>
-        </div>
       </div>
 
       <!-- Page 3: Bond (Profile) -->
-      <div class="journal-page hidden" data-page="bond">
+      <div class="journal-page" data-page="bond" style="z-index: 1;">
         <h2>Il Legame</h2>
         <div class="bond-section">
           <p>Questo diario appartiene a:</p>
           <input type="text" id="playerNameInput" class="handwritten-input" placeholder="Il tuo nome" />
           <p>Amico di:</p>
           <p class="pet-name-display" id="journalPetName">Pebble</p>
-        </div>
-        <div class="page-nav">
-          <button class="prev-page-btn" data-target="calm">←</button>
-          <span>3/3</span>
         </div>
       </div>
     </div>
