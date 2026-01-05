@@ -188,13 +188,15 @@ export class GameState {
 
         if (diffDays === 0) {
             // Already claimed today
-            return { canClaim: false, currentDay: this.dailyStreak };
+            return { canClaim: false, currentDay: this.dailyStreak, reward: undefined };
         }
 
         let nextDay = this.dailyStreak + 1;
+
+        // If difference is 1 (yesterday), we continue streak.
+        // If difference > 1 (missed a day), we reset to 1.
+        // NOTE: If lastClaim is 0 (never), diffDays is huge -> reset to 1. Correct.
         if (diffDays > 1) {
-            // Missed a day, reset logic? 
-            // Standard user-friendly logic: Reset to 1.
             nextDay = 1;
         }
 
@@ -603,7 +605,12 @@ export class GameState {
             petName: 'Pebble',
             playerName: '',
             equipped: { hat: false, scarf: false, sunglasses: false },
-            metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 }
+            metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 },
+            isSleeping: false,
+            lastDailyBonusClaim: 0,
+            dailyStreak: 0,
+            dailyLimits: { current: 0, firefly: 0, stones: 0 },
+            bond: { xp: 0, level: 1 }
         };
     }
 
