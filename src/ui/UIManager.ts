@@ -18,6 +18,7 @@ import { GamesScene } from './scenes/GamesScene.js';
 import { MerchantScene } from './scenes/MerchantScene.js';
 import { JournalScene } from './scenes/JournalScene.js';
 import { SceneContext } from './scenes/SceneContext.js';
+import { initAmbientAtmosphere } from './ambientAtmosphere.js';
 
 export class UIManager {
     private hud: HUD;
@@ -66,6 +67,7 @@ export class UIManager {
         this.initNamePrompt();
         this.initTutorial();
         this.initUpdateBanner();
+        initAmbientAtmosphere();
         this.denScene.init();
         this.kitchenScene.init();
         this.hygieneScene.init();
@@ -174,9 +176,28 @@ export class UIManager {
 
         this.otterRenderer.sync(mood, equipped);
         this.inventoryView.render(gameState.getInventory());
+        this.updateWellbeingOrb(coreStats);
 
         // Apply theme
         applyTheme(settings.theme);
+    }
+
+    // Ambient status indicator: reflects the pet's worst stat as a calm color, never
+    // as an alarming number or bar, so checking in stays low-anxiety by design.
+    private updateWellbeingOrb(coreStats: { hunger: number; happiness: number; energy: number; clean: number }): void {
+        const orb = $('wellbeingOrb');
+        if (!orb) return;
+
+        const worstStat = Math.min(coreStats.hunger, coreStats.happiness, coreStats.energy, coreStats.clean);
+        let state: 'thriving' | 'content' | 'needs-care' = 'content';
+        if (worstStat >= 60) {
+            state = 'thriving';
+        } else if (worstStat < 30) {
+            state = 'needs-care';
+        }
+
+        orb.classList.remove('wellbeing-thriving', 'wellbeing-content', 'wellbeing-needs-care');
+        orb.classList.add(`wellbeing-${state}`);
     }
 
     // --- Initialization Methods ---

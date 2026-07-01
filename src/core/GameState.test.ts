@@ -92,7 +92,7 @@ describe('GameState daily bonus', () => {
         vi.useRealTimers();
     });
 
-    it('continues the streak on the following day and resets it after a missed day', () => {
+    it('continues the streak on the following day and halves it after a missed day', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-07-01T10:00:00'));
         const { gameState } = makeGameState();
@@ -110,11 +110,28 @@ describe('GameState daily bonus', () => {
         expect(day2).toEqual({ type: 'seaGlass', value: 20 });
         expect(gameState.getDailyStreak()).toBe(2);
 
-        // Skip a day: streak resets to 1
+        // Skip a day: streak halves (floor) instead of wiping out to 1
         vi.setSystemTime(new Date('2026-07-04T10:00:00'));
         const day4 = gameState.claimDailyBonus();
         expect(day4).toEqual({ type: 'seaGlass', value: 10 });
         expect(gameState.getDailyStreak()).toBe(1);
+    });
+
+    it('does not wipe out a long streak entirely after a missed day', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-07-01T10:00:00'));
+        const { gameState } = makeGameState();
+
+        for (let day = 0; day < 6; day++) {
+            vi.setSystemTime(new Date(2026, 6, 1 + day, 10, 0, 0));
+            gameState.claimDailyBonus();
+        }
+        expect(gameState.getDailyStreak()).toBe(6);
+
+        // Miss two days, then claim again: streak halves instead of resetting to 1
+        vi.setSystemTime(new Date(2026, 6, 9, 10, 0, 0));
+        gameState.claimDailyBonus();
+        expect(gameState.getDailyStreak()).toBe(3);
     });
 });
 

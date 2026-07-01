@@ -207,9 +207,10 @@ export class GameState {
         let nextDay = this.dailyStreak + 1;
 
         // If difference is 1 (yesterday), we continue streak.
-        // If difference > 1 (missed a day), we reset to 1.
+        // If more days were missed, halve the streak instead of wiping it out entirely
+        // (a full reset punishes a missed day too harshly and breeds streak anxiety).
         if (diffDays > 1) {
-            nextDay = 1;
+            nextDay = Math.max(1, Math.floor(this.dailyStreak / 2));
         }
 
         const reward = this.gameRulesService.getDailyReward(nextDay);

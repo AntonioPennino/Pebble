@@ -93,6 +93,39 @@ header {
 
 
 
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wellbeing-orb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: background 1.2s ease, box-shadow 1.2s ease;
+}
+
+.wellbeing-orb.wellbeing-thriving {
+  background: radial-gradient(circle at 35% 30%, #FFE4B0, var(--accent-coral));
+  box-shadow: 0 0 8px rgba(255, 171, 145, 0.7);
+}
+
+.wellbeing-orb.wellbeing-content {
+  background: radial-gradient(circle at 35% 30%, #FFFDF8, var(--accent-sand));
+  box-shadow: 0 0 4px rgba(215, 204, 200, 0.5);
+}
+
+.wellbeing-orb.wellbeing-needs-care {
+  background: radial-gradient(circle at 35% 30%, #CFE0DD, #78909C);
+  animation: wellbeing-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes wellbeing-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
 .brand-lowercase {
   font-family: 'Patrick Hand', cursive; /* Ensure handwriting font */
   font-size: 2rem;
@@ -802,6 +835,19 @@ body.zen-mode .coins-display {
     filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.8));
 }
 
+/* Ambient Light - soft, continuous time-of-day tint (independent of the sleep toggle) */
+.ambient-light {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    z-index: 500; /* Above scenes, below the explicit sleep overlay (999) and header (1000) */
+    pointer-events: none;
+    transition: background-color 4s ease-in-out;
+}
+
 /* Night Mode Overlay */
 .night-overlay {
     position: fixed;
@@ -814,6 +860,58 @@ body.zen-mode .coins-display {
     pointer-events: none; /* Click through to lantern */
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
+}
+
+/* Ambient Particles - lightweight floating specks so empty scenes feel alive
+   without needing new illustrated art. Purely decorative, click-through. */
+.ambient-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.ambient-particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation-name: ambient-drift;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+.particle-dust {
+    background: radial-gradient(circle, rgba(255, 213, 153, 0.85) 0%, rgba(255, 213, 153, 0) 70%);
+    --particle-opacity: 0.55;
+}
+
+.particle-pollen {
+    background: radial-gradient(circle, rgba(220, 231, 117, 0.8) 0%, rgba(220, 231, 117, 0) 70%);
+    --particle-opacity: 0.5;
+}
+
+.particle-bubble {
+    background: radial-gradient(circle, rgba(178, 223, 219, 0.05) 40%, rgba(77, 182, 172, 0.35) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    --particle-opacity: 0.6;
+}
+
+@keyframes ambient-drift {
+    0% {
+        transform: translateY(0) scale(0.85);
+        opacity: 0;
+    }
+    12% {
+        opacity: var(--particle-opacity, 0.5);
+    }
+    88% {
+        opacity: var(--particle-opacity, 0.5);
+    }
+    100% {
+        transform: translateY(-160px) scale(1.05);
+        opacity: 0;
+    }
 }
 
 body.night-mode .night-overlay {
