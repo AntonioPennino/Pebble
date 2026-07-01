@@ -141,6 +141,10 @@ export class AudioManager {
   }
 
   public async playSFX(name: string, variance = false): Promise<void> {
+    if (this.isAmbienceMuted) {
+      return;
+    }
+
     if (!this.manifest.has(name)) {
       await this.resume();
       this.playFallbackClick(this.getContext());
