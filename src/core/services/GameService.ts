@@ -1,6 +1,5 @@
 import { GameState } from '../GameState.js';
 import { recordEvent } from '../analytics.js';
-import { audioManager } from '../audio.js';
 
 export class GameService {
     constructor(private gameState: GameState) { }
@@ -18,7 +17,6 @@ export class GameService {
         });
 
         recordEvent('azione:cibo');
-        void audioManager.playSFX('eat');
 
         // Bond
         if (this.gameState.addBondXP(5)) {
