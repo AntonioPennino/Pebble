@@ -22,6 +22,8 @@ export class GameState {
         this.isSleeping = false; // Sleep state
         this.lastDailyBonusClaim = 0;
         this.dailyStreak = 0;
+        this.isDirty = false;
+        this.lastUpdated = Date.now();
         const stored = this.readFromStorage();
         this.hadStoredStateOnBoot = stored.hadData;
         this.stats = stored.state.stats;
@@ -35,8 +37,22 @@ export class GameState {
         this.isSleeping = !!stored.state.isSleeping; // Restore sleep state
         this.lastDailyBonusClaim = stored.state.lastDailyBonusClaim || 0;
         this.dailyStreak = stored.state.dailyStreak || 0;
+        this.lastUpdated = stored.state.lastUpdated || Date.now();
+        // Init Limits & Bond
+        this.dailyLimits = stored.state.dailyLimits || { date: new Date().toDateString(), current: 0, firefly: 0, stones: 0 };
+        this.bond = stored.state.bond || { xp: 0, level: 1 };
+        this.checkDailyReset(); // Reset limits if new day
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
+        // Offline Handling
+        if (typeof window !== 'undefined') {
+            window.addEventListener('online', () => {
+                if (this.isDirty) {
+                    console.log('[Pebble] Connessione ripristinata. Sincronizzazione in corso...');
+                    this.triggerAutoSync();
+                }
+            });
+        }
     }
     subscribe(listener) {
         this.listeners.push(listener);
@@ -48,7 +64,13 @@ export class GameState {
         this.listeners.forEach(l => l());
     }
     getStats() {
-        return this.cloneStats(this.stats);
+        return {
+            ...this.stats,
+            days: this.getDaysPlayed(),
+            minigamesPlayed: this.metrics.gamesPlayed,
+            fishCaught: this.metrics.fishCaught,
+            itemsCollected: this.inventory.length
+        };
     }
     getInventory() {
         return [...this.inventory];
@@ -76,7 +98,12 @@ export class GameState {
     async recoverFromCloudCode(code) {
         const result = await this.cloudService.recoverFromCloudCode(code, this.playerId);
         if (result.ok) {
+            // CRITICAL: Switch to the recovered ID before syncing!
+            this.applyPlayerId(code, { forceNotify: true });
+            // Now sync to pull down the data for this new ID
             await this.syncWithSupabase();
+            // Force save to persist the new ID and data locally immediately
+            this.writeToStorage();
             return { ok: true, alreadyLinked: result.alreadyLinked };
         }
         return { ok: false, reason: result.reason };
@@ -109,15 +136,15 @@ export class GameState {
         last.setHours(0, 0, 0, 0);
         today.setHours(0, 0, 0, 0);
         const diffTime = today.getTime() - last.getTime();
-        const diffDays = diffTime / (1000 * 60 * 60 * 24);
-        if (diffDays === 0) {
-            // Already claimed today
-            return { canClaim: false, currentDay: this.dailyStreak };
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays <= 0) {
+            // Already claimed today (or future/time glitch)
+            return { canClaim: false, currentDay: this.dailyStreak, reward: undefined };
         }
         let nextDay = this.dailyStreak + 1;
+        // If difference is 1 (yesterday), we continue streak.
+        // If difference > 1 (missed a day), we reset to 1.
         if (diffDays > 1) {
-            // Missed a day, reset logic? 
-            // Standard user-friendly logic: Reset to 1.
             nextDay = 1;
         }
         const reward = this.gameRulesService.getDailyReward(nextDay);
@@ -189,6 +216,47 @@ export class GameState {
         // Convert ms to days, rounding up (day 1 starts at 0ms)
         return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
     }
+    checkDailyReset() {
+        const today = new Date().toDateString();
+        if (this.dailyLimits.date !== today) {
+            this.dailyLimits = {
+                date: today,
+                current: 0,
+                firefly: 0,
+                stones: 0
+            };
+            this.writeToStorage();
+        }
+    }
+    getDailyUsage(activity) {
+        this.checkDailyReset(); // Ensure fresh
+        return this.dailyLimits[activity];
+    }
+    incrementDailyUsage(activity, amount = 1) {
+        this.checkDailyReset();
+        this.dailyLimits[activity] += amount;
+        this.writeToStorage();
+    }
+    getBond() {
+        return { ...this.bond };
+    }
+    addBondXP(amount) {
+        this.bond.xp += amount;
+        let leveledUp = false;
+        // Simple Level Curve: Level * 100 XP required
+        const xpReq = this.bond.level * 100;
+        if (this.bond.xp >= xpReq) {
+            this.bond.level++;
+            this.bond.xp -= xpReq; // Rolling over XP or just resetting? Let's keep it cumulative-ish or simple
+            // Actually standard RPG: XP resets or threshold grows. 
+            // Let's do: XP carries over for simplicity in display (0..100)
+            leveledUp = true;
+        }
+        this.writeToStorage();
+        if (leveledUp)
+            this.notifyListeners();
+        return leveledUp;
+    }
     calculateOfflineProgress(now = Date.now()) {
         const previousLogin = this.lastLoginDate;
         if (!Number.isFinite(previousLogin) || previousLogin <= 0) {
@@ -222,9 +290,17 @@ export class GameState {
         };
     }
     async syncWithSupabase() {
+        // PACKING EXTRA DATA: We pack bond, metrics, and dailyLimits into the 'stats' JSONB column
+        // to ensure full persistence without changing the SQL schema.
+        const packedStats = {
+            ...this.stats,
+            bond: this.bond,
+            metrics: this.metrics,
+            dailyLimits: this.dailyLimits
+        };
         // Sync stats, inventory, petName, and playerName
-        const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory, this.petName, this.playerName, this.firstLoginDate // Add this!
-        );
+        const remote = await this.cloudService.syncWithSupabase(this.playerId, packedStats, // Sending PACKED stats
+        this.lastLoginDate, this.inventory, this.petName, this.playerName, this.firstLoginDate);
         if (remote) {
             this.mergeRemoteState(remote);
             this.writeToStorage();
@@ -233,11 +309,20 @@ export class GameState {
     }
     mergeRemoteState(remote) {
         const remoteLogin = typeof remote.last_login === 'string' ? Date.parse(remote.last_login) : Number.NaN;
-        const remoteStats = this.sanitizeStats(remote.stats);
+        // Unpack potential extra data from the 'stats' jsonb
+        const rawStats = remote.stats || {};
+        const remoteStats = this.sanitizeStats(rawStats);
         const remoteInventory = this.sanitizeInventory(remote.inventory);
+        // Only trust remote state (stats + unpacked bond/metrics/dailyLimits) if it's newer than local.
         if (Number.isFinite(remoteLogin) && remoteLogin > this.lastLoginDate) {
             this.stats = remoteStats;
             this.lastLoginDate = remoteLogin;
+            if (rawStats.bond)
+                this.bond = { ...rawStats.bond };
+            if (rawStats.metrics)
+                this.metrics = { ...rawStats.metrics };
+            if (rawStats.dailyLimits)
+                this.dailyLimits = { ...rawStats.dailyLimits };
         }
         const mergedInventory = new Set([...this.inventory, ...remoteInventory]);
         const beforeSize = this.inventory.length;
@@ -249,14 +334,6 @@ export class GameState {
         // Sync playerName
         if (remote.player_name && !this.playerName) {
             this.playerName = remote.player_name;
-        }
-        else if (remote.player_name && this.playerName && remote.player_name !== this.playerName) {
-            // Conflict: We can't easily know which is newer without per-field timestamps. 
-            // For now, let's assume local is fresher if they differ, or trust remote.
-            // Let's trust local if it's set, because the user might just have typed it.
-            // Actually, syncWithSupabase *pushes* local to remote. 
-            // mergeRemoteState usually happens if we pulled data. 
-            // If we are recovering, we want remote.
         }
         // Sync created_at for accurate days count
         if (remote.created_at) {
@@ -376,6 +453,7 @@ export class GameState {
         }
     }
     writeToStorage() {
+        this.lastUpdated = Date.now();
         const payload = {
             stats: this.cloneStats(this.stats),
             lastLoginDate: this.lastLoginDate,
@@ -387,7 +465,10 @@ export class GameState {
             metrics: { ...this.metrics },
             isSleeping: this.isSleeping, // Save sleep state
             lastDailyBonusClaim: this.lastDailyBonusClaim,
-            dailyStreak: this.dailyStreak
+            dailyStreak: this.dailyStreak,
+            dailyLimits: { ...this.dailyLimits },
+            bond: { ...this.bond },
+            lastUpdated: this.lastUpdated
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
@@ -399,7 +480,14 @@ export class GameState {
         }
         // Debounce sync to avoid spamming Supabase on every stat change
         this.syncTimeout = setTimeout(() => {
-            void this.syncWithSupabase();
+            this.syncWithSupabase()
+                .then(() => {
+                this.isDirty = false;
+            })
+                .catch(err => {
+                console.warn('[Pebble] Sync failed, marked generic dirty', err);
+                this.isDirty = true;
+            });
             this.syncTimeout = null;
         }, 5000); // 5 seconds debounce
     }
@@ -426,7 +514,12 @@ export class GameState {
             petName: 'Pebble',
             playerName: '',
             equipped: { hat: false, scarf: false, sunglasses: false },
-            metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 }
+            metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 },
+            isSleeping: false,
+            lastDailyBonusClaim: 0,
+            dailyStreak: 0,
+            dailyLimits: { date: new Date().toDateString(), current: 0, firefly: 0, stones: 0 },
+            bond: { xp: 0, level: 1 }
         };
     }
     cloneStats(stats) {
@@ -454,5 +547,31 @@ export class GameState {
         }
         const random = Math.floor(Math.random() * 4294967295).toString(16).padStart(8, '0');
         return `player-${Date.now().toString(16)}-${random}`;
+    }
+    getFullStateString() {
+        try {
+            const raw = this.storageService.getItem(LOCAL_STORAGE_KEY);
+            return raw ? btoa(raw) : '';
+        }
+        catch (e) {
+            console.error('Export failed', e);
+            return '';
+        }
+    }
+    importStateString(b64) {
+        try {
+            const raw = atob(b64);
+            const parsed = JSON.parse(raw);
+            if (!parsed.stats || !parsed.petName) {
+                return false;
+            }
+            this.storageService.setItem(LOCAL_STORAGE_KEY, raw);
+            window.location.reload();
+            return true;
+        }
+        catch (e) {
+            console.error('Import failed', e);
+            return false;
+        }
     }
 }

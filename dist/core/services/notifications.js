@@ -21,36 +21,20 @@ const LOW_STAT_MESSAGES = {
     }
 };
 const REMINDER_COOLDOWN_MS = 30 * 60 * 1000; // 30 minuti
+import { NativeService } from '../native.js'; // Import NativeService
 export function notificationsSupported() {
-    return typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
+    return NativeService.isNative() || (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator);
 }
 export async function enableNotifications() {
-    if (!notificationsSupported()) {
-        getSettingsStateInstance().updateNotificationSettings({
-            permission: 'denied',
-            enabled: false
-        });
-        return false;
-    }
-    const currentPermission = Notification.permission;
-    if (currentPermission === 'granted') {
-        getSettingsStateInstance().updateNotificationSettings({
-            permission: 'granted',
-            enabled: true
-        });
-        await ensurePushSubscription();
-        return true;
-    }
-    // markNotificationPrompted(); // Was in state.ts. We can track this in SettingsState if needed.
-    // For now, let's assume we just update lastPromptAt in SettingsState.
-    getSettingsStateInstance().updateNotificationSettings({ lastPromptAt: Date.now() });
-    const permission = await Notification.requestPermission();
+    const granted = await NativeService.notifications.requestPermissions();
     getSettingsStateInstance().updateNotificationSettings({
-        permission: permission,
-        enabled: permission === 'granted'
+        permission: granted ? 'granted' : 'denied',
+        enabled: granted
     });
-    if (permission === 'granted') {
-        await ensurePushSubscription();
+    if (granted) {
+        if (!NativeService.isNative()) {
+            await ensurePushSubscription(); // Web Push only for now
+        }
         recordEvent('notifiche:abilitate');
         return true;
     }
@@ -63,6 +47,12 @@ export async function disableNotifications() {
         subscriptionId: null
     });
     if (!notificationsSupported()) {
+        return;
+    }
+    // Native: maybe cancel scheduled ones?
+    if (NativeService.isNative()) {
+        // Logic to clear local notifications if needed
+        // await NativeService.notifications.clear(); // If implemented
         return;
     }
     try {
@@ -79,35 +69,25 @@ export async function disableNotifications() {
 }
 export async function notifyLowStat(stat) {
     const settings = getSettingsStateInstance().getSettings();
-    if (!settings.notifications.enabled || settings.notifications.permission !== 'granted') {
+    if (!settings.notifications.enabled)
         return;
-    }
     const lastSent = settings.notifications.lastSent[stat] ?? 0;
-    if (Date.now() - lastSent < REMINDER_COOLDOWN_MS) {
+    if (Date.now() - lastSent < REMINDER_COOLDOWN_MS)
         return;
-    }
-    if (!notificationsSupported()) {
-        return;
-    }
-    const registration = await navigator.serviceWorker.ready;
     const message = LOW_STAT_MESSAGES[stat];
-    try {
-        await registration.showNotification(message.title, {
-            body: message.body,
-            icon: 'icons/icon-192.png',
-            badge: 'icons/icon-192.png',
-            tag: `low-${stat}`,
-            data: { stat }
-        });
-        recordEvent(`notifiche:${stat}`);
-    }
-    catch (error) {
-        console.warn('Impossibile mostrare la notifica locale', error);
-    }
-    // markNotificationSent(stat);
+    // Use NativeService
+    await NativeService.notifications.schedule({
+        id: Math.floor(Math.random() * 10000), // Random ID for now
+        title: message.title,
+        body: message.body
+    });
+    // Track
     const lastSentUpdate = { ...settings.notifications.lastSent, [stat]: Date.now() };
     getSettingsStateInstance().updateNotificationSettings({ lastSent: lastSentUpdate });
-    void triggerRemoteReminder(stat).catch(() => undefined);
+    // Remote trigger (Web fallback / Cloud logic)
+    if (!NativeService.isNative()) {
+        void triggerRemoteReminder(stat).catch(() => undefined);
+    }
 }
 async function ensurePushSubscription() {
     if (!notificationsSupported()) {

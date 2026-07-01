@@ -1,4 +1,5 @@
 import { $ } from '../utils.js';
+import { getGameStateInstance } from '../../bootstrap.js';
 const OTTER_ASSET_BASE = 'src/assets/otter';
 const OUTFIT_VARIANTS = [
     { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },
@@ -12,8 +13,19 @@ export class OtterRenderer {
         this.otterAnimationTimers = new WeakMap();
         this.latestMood = 'neutral';
         this.latestAccessories = { hat: false, scarf: false, sunglasses: false };
+        this.temporaryAccessories = null;
+    }
+    setTemporaryOutfit(accessories) {
+        this.temporaryAccessories = accessories;
+        // Trigger a re-render with current state, forcing the temporary outfit to apply
+        this.sync(this.latestMood, this.latestAccessories, true);
     }
     sync(mood, accessories, force = false) {
+        // Bond Evolution: If bond is high (>= 5), Pebble is always happy to see you!
+        const bond = getGameStateInstance().getBond();
+        if (bond.level >= 5 && mood === 'neutral') {
+            mood = 'happy';
+        }
         this.latestMood = mood;
         this.latestAccessories = accessories;
         this.collectOtterElements();
@@ -88,8 +100,14 @@ export class OtterRenderer {
         return $('otterImage');
     }
     applyExpressionToElement(element, mood, accessories, force = false) {
-        const { src, outfit } = this.buildOtterImage(`otter_${mood}`, accessories);
+        // Overlay temporary accessories if active
+        const effectiveAccessories = this.temporaryAccessories
+            ? { ...accessories, ...this.temporaryAccessories }
+            : accessories;
+        const { src, outfit } = this.buildOtterImage(`otter_${mood}`, effectiveAccessories);
         const cached = this.otterRenderCache.get(element);
+        // If effective outfit changed, ignore cache check for outfit key comparison if needed, 
+        // but 'outfit' key is derived from effective, so it should be fine.
         if (!force && cached && cached.mood === mood && cached.outfit === outfit) {
             return;
         }

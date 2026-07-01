@@ -10,7 +10,8 @@
     "watch": "tsc --watch",
     "serve": "http-server . -p 4173",
     "dev": "http-server . -p 4173",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
@@ -33,11 +34,14 @@
     "@capacitor/android": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
+    "@capacitor/local-notifications": "^8.0.0",
     "@supabase/supabase-js": "^2.45.2"
   },
   "devDependencies": {
     "http-server": "^14.1.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
   }
 }

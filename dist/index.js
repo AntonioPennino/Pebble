@@ -1,6 +1,16 @@
 import { UIManager } from './ui/UIManager.js';
 import { calculateOfflineProgress, getGameStateInstance, getGameServiceInstance, syncWithSupabase } from './bootstrap.js';
 import { audioManager } from './core/audio.js';
+import { notifyLowStat } from './core/services/notifications.js';
+const TICK_INTERVAL_MS = 5000;
+const CLOUD_SYNC_INTERVAL_MS = 60000;
+const LOW_STAT_THRESHOLD = 30;
+const STAT_DECAY_PER_TICK = {
+    hunger: 0.5,
+    happiness: 0.5,
+    energy: 0.2,
+    clean: 0.3
+};
 const uiManager = new UIManager();
 function setupServiceWorker() {
     if (!('serviceWorker' in navigator)) {
@@ -105,26 +115,29 @@ function bootstrap() {
     });
     // Game Loop / Tick
     window.setInterval(() => {
-        // advanceTick(); // Was in state.ts. Logic needs to be moved to GameService or GameState.
-        // GameState.calculateOfflineProgress handles decay.
-        // We need a 'tick' method for active play decay?
-        // state.ts had 'advanceTick' which decayed stats every 5 seconds.
-        // Let's implement decay in GameService or GameState.
-        // For now, let's just use calculateOfflineProgress with current time?
-        // No, offline progress is for large gaps.
-        // We need a simple decay.
         const stats = gameState.getStats();
-        gameState.setStats({
-            hunger: Math.max(0, stats.hunger - 0.5),
-            happiness: Math.max(0, stats.happiness - 0.5),
-            energy: Math.max(0, stats.energy - 0.2),
-            clean: Math.max(0, stats.clean - 0.3)
-        });
-    }, 5000);
+        // Decay logic
+        const nextStats = {
+            hunger: Math.max(0, stats.hunger - STAT_DECAY_PER_TICK.hunger),
+            happiness: Math.max(0, stats.happiness - STAT_DECAY_PER_TICK.happiness),
+            energy: Math.max(0, stats.energy - STAT_DECAY_PER_TICK.energy),
+            clean: Math.max(0, stats.clean - STAT_DECAY_PER_TICK.clean)
+        };
+        gameState.setStats(nextStats);
+        // Check for notifications
+        if (nextStats.hunger < LOW_STAT_THRESHOLD)
+            void notifyLowStat('hunger');
+        if (nextStats.happiness < LOW_STAT_THRESHOLD)
+            void notifyLowStat('happy');
+        if (nextStats.energy < LOW_STAT_THRESHOLD)
+            void notifyLowStat('energy');
+        if (nextStats.clean < LOW_STAT_THRESHOLD)
+            void notifyLowStat('clean');
+    }, TICK_INTERVAL_MS);
     // Auto-save is handled by GameState on every change, but we can force sync occasionally?
     // GameState writes to storage on every setStats.
     // We might want to sync with cloud periodically.
-    window.setInterval(() => void syncWithSupabase(), 60000);
+    window.setInterval(() => void syncWithSupabase(), CLOUD_SYNC_INTERVAL_MS);
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

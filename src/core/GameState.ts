@@ -1,7 +1,8 @@
-import { CoreStats, PebbleGiftEventDetail, AccessoryState, GameStats } from './types.js';
+import { CoreStats, PebbleGiftEventDetail, AccessoryState, GameStats, DailyLimits, BondState, PackedStats } from './types.js';
 import { IStorageService } from './interfaces/IStorageService.js';
 import { ICloudService } from './interfaces/ICloudService.js';
 import { IGameRulesService } from './interfaces/IGameRulesService.js';
+import { SupabaseGameStateRow } from './interfaces/ICloudService.js';
 
 const LOCAL_STORAGE_KEY = 'pebble:game-state:v1';
 const PLAYER_ID_STORAGE_KEY = 'pebble:player-id:v1';
@@ -28,16 +29,8 @@ interface StoredGameState {
     isSleeping?: boolean; // Persisted sleep state
     lastDailyBonusClaim?: number;
     dailyStreak?: number;
-    dailyLimits?: {
-        date: string; // To check if we need to reset
-        current: number;
-        firefly: number;
-        stones: number;
-    };
-    bond?: {
-        xp: number;
-        level: number;
-    };
+    dailyLimits?: DailyLimits;
+    bond?: BondState;
     lastUpdated?: number;
 }
 
@@ -55,12 +48,12 @@ export class GameState {
     private hadStoredPlayerId = false;
     private attemptedRemoteRecovery = false;
     private listeners: Array<() => void> = [];
-    private syncTimeout: any = null; // For debounce
+    private syncTimeout: ReturnType<typeof setTimeout> | null = null; // For debounce
     private isSleeping: boolean = false; // Sleep state
     private lastDailyBonusClaim: number = 0;
     private dailyStreak: number = 0;
-    private dailyLimits: { date: string; current: number; firefly: number; stones: number };
-    private bond: { xp: number; level: number };
+    private dailyLimits: DailyLimits;
+    private bond: BondState;
     private isDirty = false;
     private lastUpdated = Date.now();
 
@@ -325,7 +318,7 @@ export class GameState {
         this.writeToStorage();
     }
 
-    public getBond(): { xp: number; level: number } {
+    public getBond(): BondState {
         return { ...this.bond };
     }
 
@@ -390,7 +383,7 @@ export class GameState {
     public async syncWithSupabase(): Promise<void> {
         // PACKING EXTRA DATA: We pack bond, metrics, and dailyLimits into the 'stats' JSONB column
         // to ensure full persistence without changing the SQL schema.
-        const packedStats: any = {
+        const packedStats: PackedStats = {
             ...this.stats,
             bond: this.bond,
             metrics: this.metrics,
@@ -414,44 +407,15 @@ export class GameState {
         }
     }
 
-    private mergeRemoteState(remote: any): void {
+    private mergeRemoteState(remote: SupabaseGameStateRow): void {
         const remoteLogin = typeof remote.last_login === 'string' ? Date.parse(remote.last_login) : Number.NaN;
         // Unpack potential extra data from the 'stats' jsonb
-        const rawStats = remote.stats || {};
+        const rawStats: Partial<PackedStats> = remote.stats || {};
 
         const remoteStats = this.sanitizeStats(rawStats);
         const remoteInventory = this.sanitizeInventory(remote.inventory);
 
-        // UNPACK EXTRA DATA if present (Full Pack Strategy)
-        if (rawStats.bond) {
-            this.bond = { ...rawStats.bond };
-        }
-        if (rawStats.metrics) {
-            this.metrics = { ...rawStats.metrics };
-        }
-        if (rawStats.dailyLimits) {
-            // Check date to ensure we don't restore old limits? 
-            // Actually trust cloud if it's newer login.
-            // If remoteLogin > local, we trust it.
-            this.dailyLimits = { ...rawStats.dailyLimits };
-        }
-
-        if (Number.isFinite(remoteLogin) && remoteLogin > this.lastLoginDate) {
-            this.stats = remoteStats;
-            this.lastLoginDate = remoteLogin;
-            // Also trust the unpacked data specifically here? 
-            // The unpacking above did it unconditionally. 
-            // Ideally we only overwrite if remote is newer.
-            // Moving unpacking INSIDE this block is safer.
-        } else {
-            // If local is newer, we ignoring remote stats. 
-            // Revert unpacking?
-            // Actually, merge logic usually implies "Merge Union" for inventory, but "Winner Takes All" for state.
-            // If remote is older, we shouldn't overwrite local bond/metrics.
-            // FIX: Move unpacking inside the `remoteLogin > this.lastLoginDate` check.
-        }
-
-        // CORRECT LOGIC:
+        // Only trust remote state (stats + unpacked bond/metrics/dailyLimits) if it's newer than local.
         if (Number.isFinite(remoteLogin) && remoteLogin > this.lastLoginDate) {
             this.stats = remoteStats;
             this.lastLoginDate = remoteLogin;
@@ -530,7 +494,7 @@ export class GameState {
             .filter(item => item.length > 0);
     }
 
-    private applyRecoveredSupabaseState(newPlayerId: string, remote: any): void {
+    private applyRecoveredSupabaseState(newPlayerId: string, remote: SupabaseGameStateRow): void {
         this.applyPlayerId(newPlayerId, { forceNotify: true });
 
         const remoteStats = this.sanitizeStats(remote.stats);

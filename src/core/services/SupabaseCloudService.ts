@@ -1,6 +1,6 @@
 import { ICloudService, CloudRecoveryResult, SupabaseGameStateRow } from '../interfaces/ICloudService.js';
 import { getSupabaseClient } from './cloudSync.js';
-import { CoreStats } from '../types.js';
+import { PackedStats } from '../types.js';
 
 export class SupabaseCloudService implements ICloudService {
     private supabaseUnavailable = false;
@@ -55,7 +55,7 @@ export class SupabaseCloudService implements ICloudService {
         }
     }
 
-    public async syncWithSupabase(playerId: string, stats: any, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null> {
+    public async syncWithSupabase(playerId: string, stats: PackedStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null> {
         const supabase = getSupabaseClient();
         if (!supabase || this.supabaseUnavailable) {
             return null;

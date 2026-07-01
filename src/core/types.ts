@@ -84,3 +84,23 @@ export interface InventoryEventDetail {
 export interface PlayerIdChangeDetail {
   playerId: string;
 }
+
+export interface DailyLimits {
+  date: string; // To check if we need to reset
+  current: number;
+  firefly: number;
+  stones: number;
+}
+
+export interface BondState {
+  xp: number;
+  level: number;
+}
+
+// Extra fields packed into the Supabase 'stats' JSONB column alongside CoreStats,
+// to persist bond/metrics/dailyLimits without changing the SQL schema.
+export interface PackedStats extends CoreStats {
+  bond: BondState;
+  metrics: GameStats;
+  dailyLimits: DailyLimits;
+}

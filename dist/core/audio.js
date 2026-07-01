@@ -11,6 +11,8 @@ export class AudioManager {
         this.bufferPromises = new Map();
         this.currentAmbient = null;
         this.defaultFade = 1.6;
+        this.isAmbienceMuted = false;
+        this.lastAmbientName = null;
     }
     static getInstance() {
         if (!this.instance) {
@@ -53,7 +55,20 @@ export class AudioManager {
             });
         }
     }
+    setAmbienceMuted(muted) {
+        this.isAmbienceMuted = muted;
+        if (muted) {
+            void this.stopAmbient();
+        }
+        else if (this.lastAmbientName) {
+            void this.playAmbient(this.lastAmbientName);
+        }
+    }
     async playAmbient(name, volume = 0.5) {
+        this.lastAmbientName = name;
+        if (this.isAmbienceMuted) {
+            return;
+        }
         if (!this.manifest.has(name)) {
             console.warn(`Traccia ambient "${name}" non registrata`);
             return;

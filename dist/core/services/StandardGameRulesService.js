@@ -53,14 +53,24 @@ export class StandardGameRulesService {
         // Cycle every 7 days
         const cycleDay = ((day - 1) % 7) + 1;
         switch (cycleDay) {
-            case 1: return { type: 'seaGlass', value: 50 };
-            case 2: return { type: 'seaGlass', value: 100 };
-            case 3: return { type: 'seaGlass', value: 150 };
-            case 4: return { type: 'item', value: 'Conchiglia Preziosa' }; // Item placeholder
-            case 5: return { type: 'seaGlass', value: 200 };
-            case 6: return { type: 'seaGlass', value: 300 };
-            case 7: return { type: 'item', value: 'Cappello Avventuriero' }; // Rare item placeholder
-            default: return { type: 'seaGlass', value: 50 };
+            case 1: return { type: 'seaGlass', value: 25 };
+            case 2: return { type: 'seaGlass', value: 50 };
+            case 3: return { type: 'seaGlass', value: 75 };
+            case 4: return { type: 'seaGlass', value: 100 }; // Big boost
+            case 5: return { type: 'seaGlass', value: 125 };
+            case 6: return { type: 'seaGlass', value: 150 };
+            case 7: return { type: 'seaGlass', value: 300 }; // Jackpot
+            default: return { type: 'seaGlass', value: 25 };
         }
+    }
+    isMerchantAvailable() {
+        const now = new Date();
+        const day = now.getDay(); // 0 = Sun, 1 = Mon, ...
+        const hour = now.getHours();
+        // Schedule: Mon (1), Wed (3), Fri (5)
+        // Hours: 08:00 - 20:00
+        const isDay = [1, 3, 5].includes(day); // Mon, Wed, Fri
+        const isTime = hour >= 8 && hour < 20;
+        return isDay && isTime;
     }
 }

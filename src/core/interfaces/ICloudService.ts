@@ -1,8 +1,8 @@
-import { CoreStats } from '../types.js';
+import { CoreStats, PackedStats } from '../types.js';
 
 export interface SupabaseGameStateRow {
     id: string;
-    stats: CoreStats | null;
+    stats: PackedStats | CoreStats | null;
     last_login: string | null;
     inventory: string[] | null;
     updated_at: string | null;
@@ -19,6 +19,6 @@ export interface CloudRecoveryResult {
 
 export interface ICloudService {
     recoverFromCloudCode(code: string, currentPlayerId: string): Promise<CloudRecoveryResult>;
-    syncWithSupabase(playerId: string, stats: any, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null>;
+    syncWithSupabase(playerId: string, stats: PackedStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null>;
     isAvailable(): boolean;
 }

@@ -4,6 +4,16 @@ import { PebbleGiftEventDetail } from './core/types.js';
 import { audioManager } from './core/audio.js';
 import { notifyLowStat } from './core/services/notifications.js';
 
+const TICK_INTERVAL_MS = 5000;
+const CLOUD_SYNC_INTERVAL_MS = 60000;
+const LOW_STAT_THRESHOLD = 30;
+const STAT_DECAY_PER_TICK = {
+  hunger: 0.5,
+  happiness: 0.5,
+  energy: 0.2,
+  clean: 0.3
+};
+
 const uiManager = new UIManager();
 
 function setupServiceWorker(): void {
@@ -131,26 +141,26 @@ function bootstrap(): void {
 
     // Decay logic
     const nextStats = {
-      hunger: Math.max(0, stats.hunger - 0.5),
-      happiness: Math.max(0, stats.happiness - 0.5),
-      energy: Math.max(0, stats.energy - 0.2),
-      clean: Math.max(0, stats.clean - 0.3)
+      hunger: Math.max(0, stats.hunger - STAT_DECAY_PER_TICK.hunger),
+      happiness: Math.max(0, stats.happiness - STAT_DECAY_PER_TICK.happiness),
+      energy: Math.max(0, stats.energy - STAT_DECAY_PER_TICK.energy),
+      clean: Math.max(0, stats.clean - STAT_DECAY_PER_TICK.clean)
     };
     gameState.setStats(nextStats);
 
     // Check for notifications
-    if (nextStats.hunger < 30) void notifyLowStat('hunger');
-    if (nextStats.happiness < 30) void notifyLowStat('happy');
-    if (nextStats.energy < 30) void notifyLowStat('energy');
-    if (nextStats.clean < 30) void notifyLowStat('clean');
+    if (nextStats.hunger < LOW_STAT_THRESHOLD) void notifyLowStat('hunger');
+    if (nextStats.happiness < LOW_STAT_THRESHOLD) void notifyLowStat('happy');
+    if (nextStats.energy < LOW_STAT_THRESHOLD) void notifyLowStat('energy');
+    if (nextStats.clean < LOW_STAT_THRESHOLD) void notifyLowStat('clean');
 
-  }, 5000);
+  }, TICK_INTERVAL_MS);
 
 
   // Auto-save is handled by GameState on every change, but we can force sync occasionally?
   // GameState writes to storage on every setStats.
   // We might want to sync with cloud periodically.
-  window.setInterval(() => void syncWithSupabase(), 60000);
+  window.setInterval(() => void syncWithSupabase(), CLOUD_SYNC_INTERVAL_MS);
 }
 
 if (document.readyState === 'loading') {
